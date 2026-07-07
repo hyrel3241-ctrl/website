@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Fiend - Requiem of Souls Logo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #050202;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Logo Container */
+        .logo-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* The Ultimate: Requiem Blast Waves */
+        .requiem-wave {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: radial-gradient(circle, rgba(255,0,40,0) 40%, rgba(20,0,5,0.8) 70%, rgba(255,10,30,1) 100%);
+            box-shadow: 0 0 40px #ff002b, inset 0 0 30px #ff0000;
+            opacity: 0.7;
+            animation: blast 3s infinite linear;
+        }
+        .w1 { width: 450px; height: 450px; animation-delay: 0s; }
+        .w2 { width: 450px; height: 450px; animation-delay: 1s; }
+        .w3 { width: 450px; height: 450px; animation-delay: 2s; }
+
+        /* Shadow Fiend Silhouette Frame */
+        .sf-silhouette {
+            position: absolute;
+            width: 180px;
+            height: 240px;
+            background: #000000;
+            clip-path: polygon(50% 0%, 65% 20%, 58% 28%, 75% 15%, 72% 38%, 90% 30%, 80% 55%, 95% 65%, 70% 75%, 75% 100%, 50% 90%, 25% 100%, 30% 75%, 5% 65%, 20% 55%, 10% 30%, 28% 38%, 25% 15%, 42% 28%, 35% 20%);
+            box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.6);
+            z-index: 5;
+            filter: drop-shadow(0 0 15px #000000);
+        }
+
+        /* Glowing Demonic Fiend Eyes */
+        .eyes-container {
+            position: absolute;
+            top: 65px;
+            width: 50px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        .eye {
+            width: 12px;
+            height: 5px;
+            background: #ff5500;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff0000, 0 0 5px #fff;
+            transform: rotate(15deg);
+        }
+        .eye.right {
+            transform: rotate(-15deg);
+        }
+
+        /* Eternal Soul Fire Smoke underneath */
+        .soul-abyss {
+            position: absolute;
+            bottom: 80px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #ff003c 10%, #300008 60%, transparent 100%);
+            border-radius: 50%;
+            filter: blur(10px);
+            z-index: 2;
+            opacity: 0.8;
+            animation: pulse 1.5s infinite ease-in-out alternate;
+        }
+
+        /* Animations */
+        @keyframes blast {
+            0% {
+                transform: scale(0.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            100% { transform: scale(1.1); opacity: 0.9; }
+        }
+
+        /* Text branding style */
+        .title {
+            position: absolute;
+            bottom: 20px;
+            color: #da1a1a;
+            letter-spacing: 6px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 8px rgba(218, 26, 26, 0.6);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <!-- Outward exploding souls -->
+        <div class="requiem-wave w1"></div>
+        <div class="requiem-wave w2"></div>
+        <div class="requiem-wave w3"></div>
+
+        <!-- Flame core base -->
+        <div class="soul-abyss"></div>
+
+        <!-- Nevermore Body Shapes -->
+        <div class="sf-silhouette"></div>
+
+        <!-- Glowing Face Component -->
+        <div class="eyes-container">
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+        </div>
+
+        <div class="title">NEVERMORE</div>
+    </div>
+
+</body>
+</html>
