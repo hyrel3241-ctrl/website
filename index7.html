@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fastest Gun in the West - Ultimate Arcade Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #110a05; 
+            color: #f4ecd8;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.7rem;
+            color: #ff9933;
+            text-shadow: 0 0 12px rgba(255, 153, 51, 0.6);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: 1px dashed #ff9933;
+            font-size: 1rem;
+            display: flex;
+            gap: 40px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* The Desert Arena - Supports Shake */
+        .desert-arena {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 55vh;
+            background: linear-gradient(to bottom, #211307 0%, #3d250e 70%, #8c582b 71%, #ad7640 100%);
+            border: 4px solid #5c3a1a;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            overflow: hidden;
+        }
+
+        /* Screen Shake Class triggered via JS */
+        .shake {
+            animation: screenShake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, -2px, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 3px, 0); }
+            40%, 60% { transform: translate3d(4px, -1px, 0); }
+        }
+
+        /* HUD Panel */
+        .hud {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 10;
+        }
+
+        .player-status {
+            width: 210px;
+            background: rgba(10, 5, 2, 0.75);
+            padding: 10px;
+            border: 2px solid #ff9933;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hp-label {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .hp-wrapper {
+            background: #331a00;
+            border-radius: 3px;
+            padding: 2px;
+            margin-bottom: 6px;
+        }
+
+        .hp-bar {
+            height: 12px;
+            width: 100%;
+            background: linear-gradient(to right, #ff2222, #ff5555);
+            border-radius: 2px;
+            transition: width 0.15s cubic-bezier(0, 0, 0.2, 1);
+        }
+
+        .ammo-label {
+            font-size: 0.85rem;
+            color: #ffcc00;
+            letter-spacing: 1px;
+        }
+
+        .reload-prompt {
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 0.85rem;
+            animation: blink 0.4s infinite alternate;
+            display: none;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        /* Countdown Overlay Clock */
+        #countdownOverlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        #countdownText {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #ff9933;
+            text-shadow: 0 0 25px #000;
+            transform: scale(1);
+            transition: transform 0.1s ease-out;
+        }
+
+        /* The Cowboys */
+        .cowboy {
+            position: absolute;
+            bottom: 30px;
+            width: 60px;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #cowboy1 { left: 90px; }
+        #cowboy2 { right: 90px; transform: scaleX(-1); }
+
+        .hat {
+            width: 55px;
+            height: 12px;
+            background: #2b180d;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+        }
+        .hat::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: -10px;
+            width: 75px; height: 4px;
+            background: #2b180d;
+            border-radius: 4px;
+        }
+        .head {
+            width: 26px;
+            height: 26px;
+            background: #ffcc99;
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+        .body-coat {
+            width: 42px;
+            height: 52px;
+            background: #422515;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .arm {
+            position: absolute;
+            width: 32px;
+            height: 12px;
+            background: #422515;
+            top: 10px;
+            right: -24px;
+            transform-origin: left center;
+            transform: rotate(55deg); 
+            transition: transform 0.04s ease-out;
+            border-radius: 4px;
+        }
+        .arm::after {
+            content: '🔫';
+            position: absolute;
+            right: -14px;
+            top: -8px;
+            font-size: 1.25rem;
+            transform: scaleX(-1) rotate(-55deg);
+        }
+
+        /* Tactical State Mechanics */
+        .shooting .arm {
+            transform: rotate(0deg); 
+        }
+
+        .hurt {
+            animation: flashRed 0.1s 3 alternate;
+        }
+
+        @keyframes flashRed {
+            0% { filter: brightness(1) invert(0); }
+            100% { filter: brightness(1.5) sepia(1) hue-rotate(-50deg) invert(0.2); }
+        }
+
+        .dead {
+            transform: rotate(90deg) translateY(35px) !important;
+            opacity: 0.6;
+        }
+
+        /* FX Particles & Projectile Elements */
+        .bullet {
+            position: absolute;
+            width: 18px;
+            height: 4px;
+            background: #fff;
+            box-shadow: 0 0 12px #ffbb00, 0 0 5px #fff;
+            border-radius: 2px;
+            bottom: 124px; 
+        }
+
+        .trail-particle {
+            position: absolute;
+            background: rgba(255, 230, 180, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            bottom: 124px;
+            animation: fadeSmoke 0.3s forwards;
+        }
+
+        @keyframes fadeSmoke {
+            to { transform: scale(0.2); opacity: 0; }
+        }
+
+        .blood-drop {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #cc0000;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .flash {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle, #fff 0%, #ff9900 60%, transparent 100%);
+            bottom: 109px;
+            z-index: 10;
+            display: none;
+        }
+
+        /* Screen Interfaces */
+        .screen-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 5, 2, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .winnerText {
+            font-size: 3.2rem;
+            font-weight: bold;
+            color: #ff9933;
+            margin-bottom: 25px;
+            text-shadow: 0 0 25px rgba(255,153,51,0.6);
+            letter-spacing: 1px;
+        }
+
+        .restart-btn {
+            padding: 14px 50px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #f4ecd8;
+            background: #4a2f13;
+            border: 2px solid #ff9933;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            letter-spacing: 1px;
+        }
+
+        .restart-btn:hover {
+            background: #ff9933;
+            color: #110a05;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>WILD WEST DUEL</h1>
+        <div class="instructions">
+            <div>PLAYER 1: Shoot <strong style="color:#ff5555">[Q]</strong> | Reload <strong style="color:#ff5555">[W]</strong></div>
+            <div>PLAYER 2: Shoot <strong style="color:#55ccff">[0]</strong> | Reload <strong style="color:#55ccff">[8]</strong></div>
+        </div>
+    </header>
+
+    <div class="desert-arena" id="arena">
+        
+        <div class="hud">
+            <div class="player-status">
+                <div class="hp-label" style="color: #ff5555;">P1 Cowboy</div>
+                <div class="hp-wrapper"><div id="p1-bar" class="hp-bar"></div></div>
+                <div id="p1-ammo" class="ammo-label">AMMO: 6/6</div>
+                <div id="p1-reload" class="reload-prompt">PRESS [W] TO RELOAD</div>
+            </div>
+            <div class="player-status" style="text-align: right;">
+                <div class="hp-label" style="color: #55ccff;">P2 Cowboy</div>
+                <div class="hp-wrapper"><div id="p2-bar" class="hp-bar"></div></div>
+                <div id="p2-ammo" class="ammo-label">AMMO: 6/6</div>
+                <div id="p2-reload" class="reload-prompt">PRESS [8] TO RELOAD</div>
+            </div>
+        </div>
+
+        <div id="countdownOverlay">
+            <div id="countdownText">3</div>
+        </div>
+        
+        <div id="cowboy1" class="cowboy">
+            <div class="hat"></div>
+            <div class="head"></div>
+            <div class="body-coat">
+                <div class="arm"></div>
+            </div>
+        </div>
+        <div id="flash1" class="flash" style="left: 155px;"></div>
+
+        <div id="cowboy2" class="cowboy">
+            <div class="hat"></div>
+            <div class="head"></div>
+            <div class="body-coat">
+                <div class="arm"></div>
+            </div>
+        </div>
+        <div id="flash2" class="flash" style="right: 155px;"></div>
+
+        <div id="bullet-layer"></div>
+
+        <div id="gameOverScreen" class="screen-overlay" style="display: none;">
+            <div id="winnerText" class="winnerText">PLAYER 1 WINS!</div>
+            <button class="restart-btn" onclick="resetDuel()">NEXT DUEL</button>
+        </div>
+    </div>
+
+    <div></div>
+
+    <script>
+        const state = {
+            active: false, 
+            arenaWidth: 0,
+            bullets: [],
+            particles: [],
+            p1Hp: 3,
+            p2Hp: 3,
+            p1Ammo: 6,
+            p2Ammo: 6,
+            p1CanShoot: true,
+            p2CanShoot: true,
+            pendingShots: []
+        };
+
+        const arena = document.getElementById('arena');
+        const p1 = document.getElementById('cowboy1');
+        const p2 = document.getElementById('cowboy2');
+        const flash1 = document.getElementById('flash1');
+        const flash2 = document.getElementById('flash2');
+        const p1Bar = document.getElementById('p1-bar');
+        const p2Bar = document.getElementById('p2-bar');
+        const p1AmmoEl = document.getElementById('p1-ammo');
+        const p2AmmoEl = document.getElementById('p2-ammo');
+        const p1ReloadEl = document.getElementById('p1-reload');
+        const p2ReloadEl = document.getElementById('p2-reload');
+        const bulletLayer = document.getElementById('bullet-layer');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const countdownText = document.getElementById('countdownText');
+
+        state.arenaWidth = arena.clientWidth;
+
+        runCountdown();
+
+        function runCountdown() {
+            state.active = false;
+            countdownOverlay.style.display = 'flex';
+            let count = 3;
+            countdownText.innerText = count;
+
+            let interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownText.innerText = count;
+                } else if (count === 0) {
+                    countdownText.innerText = "FIRE!";
+                } else {
+                    clearInterval(interval);
+                    countdownOverlay.style.display = 'none';
+                    state.active = true; 
+                }
+            }, 1000);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!state.active) return;
+
+            const now = performance.now();
+
+            // Player 1 Keys
+            if ((e.key === 'q' || e.key === 'Q') && state.p1CanShoot && state.p1Ammo > 0) {
+                state.p1CanShoot = false;
+                state.pendingShots.push({ player: 1, time: now });
+                processShotQueue();
+            }
+            if ((e.key === 'w' || e.key === 'W') && state.p1Ammo === 0) {
+                state.p1Ammo = 6;
+                p1AmmoEl.style.display = 'block';
+                p1AmmoEl.innerText = "AMMO: 6/6";
+                p1ReloadEl.style.display = 'none';
+            }
+
+            // Player 2 Keys
+            if (e.key === '0' && state.p2CanShoot && state.p2Ammo > 0) {
+                state.p2CanShoot = false;
+                state.pendingShots.push({ player: 2, time: now });
+                processShotQueue();
+            }
+            if (e.key === '8' && state.p2Ammo === 0) {
+                state.p2Ammo = 6;
+                p2AmmoEl.style.display = 'block';
+                p2AmmoEl.innerText = "AMMO: 6/6";
+                p2ReloadEl.style.display = 'none';
+            }
+        });
+
+        function processShotQueue() {
+            setTimeout(() => {
+                if (state.pendingShots.length === 0) return;
+                state.pendingShots.sort((a, b) => a.time - b.time);
+                executeFire(state.pendingShots[0].player);
+                state.pendingShots = [];
+            }, 0);
+        }
+
+        function triggerJuice() {
+            arena.classList.remove('shake');
+            void arena.offsetWidth; // Force CSS reflow to replay animation
+            arena.classList.add('shake');
+        }
+
+        function executeFire(playerNum) {
+            triggerJuice(); // Juice: Shake screen on shoot
+
+            if (playerNum === 1) {
+                state.p1Ammo--;
+                p1AmmoEl.innerText = `AMMO: ${state.p1Ammo}/6`;
+                if(state.p1Ammo === 0) {
+                    p1AmmoEl.style.display = 'none';
+                    p1ReloadEl.style.display = 'block';
+                }
+
+                p1.classList.add('shooting');
+                flash1.style.display = 'block';
+                spawnBullet(1, 155, 22);
+                setTimeout(() => { 
+                    p1.classList.remove('shooting'); 
+                    flash1.style.display = 'none'; 
+                    if(state.p1Hp > 0) state.p1CanShoot = true; 
+                }, 150);
+            } else {
+                state.p2Ammo--;
+                p2AmmoEl.innerText = `AMMO: ${state.p2Ammo}/6`;
+                if(state.p2Ammo === 0) {
+                    p2AmmoEl.style.display = 'none';
+                    p2ReloadEl.style.display = 'block';
+                }
+
+                p2.classList.add('shooting');
+                flash2.style.display = 'block';
+                spawnBullet(2, state.arenaWidth - 170, -22);
+                setTimeout(() => { 
+                    p2.classList.remove('shooting'); 
+                    flash2.style.display = 'none'; 
+                    if(state.p2Hp > 0) state.p2CanShoot = true; 
+                }, 150);
+            }
+        }
+
+        function spawnBullet(owner, startX, speed) {
+            const bEl = document.createElement('div');
+            bEl.className = 'bullet';
+            bEl.style.left = startX + 'px';
+            bulletLayer.appendChild(bEl);
+
+            state.bullets.push({
+                el: bEl,
+                x: startX,
+                speed: speed,
+                owner: owner
+            });
+        }
+
+        function spawnBlood(spawnX) {
+            const yPosition = arena.clientHeight - 124; // Gunshot alignment altitude
+            for(let i=0; i<12; i++) {
+                const bDrop = document.createElement('div');
+                bDrop.className = 'blood-drop';
+                bDrop.style.left = spawnX + 'px';
+                bDrop.style.top = yPosition + 'px';
+                bulletLayer.appendChild(bDrop);
+
+                state.particles.push({
+                    el: bDrop,
+                    x: spawnX,
+                    y: yPosition,
+                    vx: (Math.random() - 0.5) * 7,
+                    vy: (Math.random() - 0.8) * 8,
+                    gravity: 0.4
+                });
+            }
+        }
+
+        // Integrated Frame Render Loop Engine (Handles Bullets, Trails & Blood)
+        function gameLoop() {
+            // 1. Process Bullets & Smoke Trails
+            for (let i = state.bullets.length - 1; i >= 0; i--) {
+                let b = state.bullets[i];
+                b.x += b.speed;
+                b.el.style.left = b.x + 'px';
+
+                // Juice: Generate smoke trail particles mid-flight
+                if (Math.random() > 0.3) {
+                    const trail = document.createElement('div');
+                    trail.className = 'trail-particle';
+                    trail.style.left = b.x + (b.speed > 0 ? 0 : 15) + 'px';
+                    trail.style.width = (Math.random() * 6 + 4) + 'px';
+                    trail.style.height = trail.style.width;
+                    bulletLayer.appendChild(trail);
+                    setTimeout(() => trail.remove(), 300);
+                }
+
+                // Check Hit Player 2
+                if (b.owner === 1 && b.x >= state.arenaWidth - 140) {
+                    b.el.remove();
+                    state.bullets.splice(i, 1);
+                    registerHit(2);
+                    continue;
+                }
+                // Check Hit Player 1
+                if (b.owner === 2 && b.x <= 140) {
+                    b.el.remove();
+                    state.bullets.splice(i, 1);
+                    registerHit(1);
+                    continue;
+                }
+
+                if (b.x < 0 || b.x > state.arenaWidth) {
+                    b.el.remove();
+                    state.bullets.splice(i, 1);
+                }
+            }
+
+            // 2. Process Blood Splatter Particles Physics
+            for(let k = state.particles.length - 1; k >= 0; k--) {
+                let p = state.particles[k];
+                p.vy += p.gravity;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.el.style.left = p.x + 'px';
+                p.el.style.top = p.y + 'px';
+
+                // Remove blood if it falls off arena floor boundary caps
+                if(p.y > arena.clientHeight - 30) {
+                    p.el.remove();
+                    state.particles.splice(k, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+
+        function registerHit(targetPlayer) {
+            if (!state.active) return; 
+            triggerJuice(); // Juice: Shake screen on damage landing
+
+            if (targetPlayer === 1) {
+                spawnBlood(120); // Juice: Explode blood particles at P1 coordinate
+                state.p1Hp = Math.max(0, state.p1Hp - 1);
+                p1Bar.style.width = (state.p1Hp / 3 * 100) + '%';
+                p1.classList.add('hurt');
+                setTimeout(() => p1.classList.remove('hurt'), 250);
+                
+                if (state.p1Hp <= 0) {
+                    clearGhostBullets(1); // Fix Ghost Bullet Trade bug
+                    p1.classList.add('dead');
+                    endGame(2);
+                }
+            } else {
+                spawnBlood(state.arenaWidth - 120); // Juice: Explode blood particles at P2 coordinate
+                state.p2Hp = Math.max(0, state.p2Hp - 1);
+                p2Bar.style.width = (state.p2Hp / 3 * 100) + '%';
+                p2.classList.add('hurt');
+                setTimeout(() => p2.classList.remove('hurt'), 250);
+
+                if (state.p2Hp <= 0) {
+                    clearGhostBullets(2); // Fix Ghost Bullet Trade bug
+                    p2.classList.add('dead');
+                    endGame(1);
+                }
+            }
+        }
+
+        function clearGhostBullets(deadPlayerNum) {
+            for (let i = state.bullets.length - 1; i >= 0; i--) {
+                if (state.bullets[i].owner === deadPlayerNum) {
+                    state.bullets[i].el.remove();
+                    state.bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function endGame(winner) {
+            state.active = false;
+            setTimeout(() => {
+                const screen = document.getElementById('gameOverScreen');
+                const txt = document.getElementById('winnerText');
+                
+                if (winner === 1) {
+                    txt.innerText = "PLAYER 1 WINS THE DUEL!";
+                    txt.style.color = "#ff5555";
+                } else {
+                    txt.innerText = "PLAYER 2 WINS THE DUEL!";
+                    txt.style.color = "#55ccff";
+                }
+                screen.style.display = 'flex';
+            }, 450);
+        }
+
+        function resetDuel() {
+            state.p1Hp = 3;
+            state.p2Hp = 3;
+            state.p1Ammo = 6;
+            state.p2Ammo = 6;
+
+            p1Bar.style.width = '100%';
+            p2Bar.style.width = '100%';
+            p1AmmoEl.innerText = "AMMO: 6/6";
+            p2AmmoEl.innerText = "AMMO: 6/6";
+            p1AmmoEl.style.display = 'block';
+            p2AmmoEl.style.display = 'block';
+            p1ReloadEl.style.display = 'none';
+            p2ReloadEl.style.display = 'none';
+
+            bulletLayer.innerHTML = '';
+            state.bullets = [];
+            state.particles = [];
+            state.p1CanShoot = true;
+            state.p2CanShoot = true;
+            state.pendingShots = [];
+            
+            p1.className = 'cowboy';
+            p2.className = 'cowboy';
+            arena.className = 'desert-arena';
+            
+            document.getElementById('gameOverScreen').style.display = 'none';
+            runCountdown();
+        }
+    </script>
+</body>
+</html>

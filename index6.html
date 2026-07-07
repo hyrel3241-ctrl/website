@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickman Street Fighter: Impact Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background: #090a0f;
+            color: #fff;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 1000px;
+            height: 500px;
+            background: #111;
+            border: 4px solid #ff3355;
+            box-shadow: 0 0 30px rgba(255, 51, 85, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Arcade Style Top HUD */
+        #ui-layer {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+        }
+
+        .fighter-side {
+            width: 42%;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .health-container {
+            background: #331010;
+            border: 3px solid #fff;
+            height: 30px;
+            transform: skewX(-15deg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .health-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to bottom, #fff700, #ff2200);
+            transition: width 0.05s linear;
+        }
+
+        #p1-side .health-bar { float: right; }
+        #ai-side .health-bar { float: left; }
+
+        /* Super Meter Bars */
+        .meter-container {
+            width: 70%;
+            background: #112;
+            border: 1px solid #00d2ff;
+            height: 12px;
+            transform: skewX(-15deg);
+            overflow: hidden;
+        }
+        #p1-side .meter-container { align-self: flex-start; }
+        #ai-side .meter-container { align-self: flex-end; }
+
+        .meter-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #0055ff, #00d2ff);
+            transition: width 0.2s ease;
+        }
+
+        .fighter-name {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px #000;
+            color: #00d2ff;
+        }
+        #ai-side .fighter-name { color: #ff3355; text-align: right; }
+
+        /* Combat Deck */
+        #control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: 2px solid #ff3355;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .control-group { display: flex; gap: 8px; }
+
+        .hud-btn {
+            width: 65px;
+            height: 65px;
+            border: 2px solid #fff;
+            background: #222;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.05s;
+            font-size: 0.8rem;
+        }
+
+        .hud-btn span { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
+        .hud-btn:active { transform: scale(0.9); background: #ff3355; }
+
+        .move-btn { border-color: #00ffaa; }
+        .super-btn { border-color: #ffcc00; color: #ffcc00; }
+        .super-btn:active { background: #ffcc00; color: #000; }
+
+        /* Overlays */
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+        }
+
+        h1 { font-size: 4rem; letter-spacing: 4px; font-style: italic; text-shadow: 4px 4px #000; }
+        .start-btn {
+            margin-top: 20px; padding: 15px 50px; font-size: 1.5rem; background: #ff3355; color: #fff;
+            border: none; cursor: pointer; font-family: 'Impact'; font-style: italic; letter-spacing: 1px;
+        }
+        .start-btn:hover { background: #fff; color: #ff3355; }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <div id="ui-layer">
+            <div class="fighter-side" id="p1-side">
+                <div class="fighter-name">PLAYER</div>
+                <div class="health-container"><div id="p1-bar" class="health-bar"></div></div>
+                <div class="meter-container"><div id="p1-meter" class="meter-bar"></div></div>
+            </div>
+            <div style="font-size: 2rem; color: #fff; font-style: italic; padding-top: 5px;">VS</div>
+            <div class="fighter-side" id="ai-side">
+                <div class="fighter-name">STREET AI</div>
+                <div class="health-container"><div id="ai-bar" class="health-bar"></div></div>
+                <div class="meter-container"><div id="ai-meter" class="meter-bar"></div></div>
+            </div>
+        </div>
+
+        <div id="control-panel">
+            <div class="control-group">
+                <div class="hud-btn move-btn" onmousedown="startMove('a')" onmouseup="stopMove('a')">LEFT<span>[A]</span></div>
+                <div class="hud-btn move-btn" onmousedown="startMove('s')" onmouseup="stopMove('s')">BLOCK<span>[S]</span></div>
+                <div class="hud-btn move-btn" onclick="triggerJump()">JUMP<span>[SPACE]</span></div>
+                <div class="hud-btn move-btn" onmousedown="startMove('d')" onmouseup="stopMove('d')">RIGHT<span>[D]</span></div>
+            </div>
+            <div style="width: 2px; height: 50px; background: #444;"></div>
+            <div class="control-group">
+                <div class="hud-btn" onclick="triggerSkill('punch')">PUNCH<span>[Q]</span></div>
+                <div class="hud-btn" onclick="triggerSkill('kick')">KICK<span>[W]</span></div>
+                <div class="hud-btn" onclick="triggerSkill('uppercut')">UPPER<span>[E]</span></div>
+                <div class="hud-btn" onclick="triggerSkill('hadouken')">BLAST<span>[R]</span></div>
+                <div class="hud-btn super-btn" onclick="triggerSkill('super')">SUPER<span>[F]</span></div>
+            </div>
+        </div>
+
+        <canvas id="stageCanvas"></canvas>
+
+        <div id="menu-screen" class="overlay-screen">
+            <h1 style="color: #ff3355;">STICKMAN STREET FIGHTER</h1>
+            <p style="color: #aaa; margin-top: 10px;">A/D: Move | S: Hold to Block Attacks | Q/W/E/R: Combat Skills | F: Super Combo</p>
+            <button class="start-btn" onclick="initMatch()">FIGHT</button>
+        </div>
+
+        <div id="end-screen" class="overlay-screen" style="display: none;">
+            <h1 id="end-title">VICTORY</h1>
+            <button class="start-btn" onclick="initMatch()">REM_ATCH</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('stageCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1000; canvas.height = 500;
+
+        let p1, ai, projectiles, effects, gameRunning = false;
+        let keys = { a: false, d: false, s: false };
+        let shakeTime = 0, shakeIntensity = 0;
+        let hitStopFrames = 0;
+
+        class Fighter {
+            constructor(x, isAI) {
+                this.x = x; this.y = 390; this.vx = 0; this.vy = 0;
+                this.isAI = isAI; this.hp = 100; this.meter = 0;
+                this.dir = isAI ? -1 : 1;
+                this.state = 'idle'; // idle, walking, attacking, blocking, hit, airborne
+                this.stateTimer = 0; this.attackType = '';
+                this.groundY = 390;
+                this.color = isAI ? '#ff3355' : '#00d2ff';
+                this.trail = [];
+            }
+
+            update(opponent) {
+                if (this.y < this.groundY) {
+                    this.vy += 1.4;
+                    this.state = 'airborne';
+                } else {
+                    this.y = this.groundY; this.vy = 0;
+                    if (this.state === 'airborne') this.state = 'idle';
+                }
+
+                // Input handling / Movement Physics
+                if (!this.isAI && this.state !== 'hit' && this.state !== 'attacking') {
+                    if (keys.s && this.y === this.groundY) {
+                        this.state = 'blocking';
+                        this.vx *= 0.5;
+                    } else if (keys.a) {
+                        this.vx = -6; this.state = 'walking';
+                    } else if (keys.d) {
+                        this.vx = 6; this.state = 'walking';
+                    } else {
+                        this.vx *= 0.7;
+                        if (this.state === 'walking') this.state = 'idle';
+                    }
+                } else if (this.state === 'idle' || this.state === 'walking') {
+                    this.vx *= 0.7;
+                }
+
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 40) this.x = 40; if (this.x > canvas.width - 40) this.x = canvas.width - 40;
+
+                // Track position history for movement visual blur trails
+                this.trail.push({x: this.x, y: this.y});
+                if(this.trail.length > 5) this.trail.shift();
+
+                if (this.state !== 'attacking' && this.state !== 'hit' && this.state !== 'blocking') {
+                    this.dir = (this.x < opponent.x) ? 1 : -1;
+                }
+
+                if (this.stateTimer > 0) {
+                    this.stateTimer--;
+                    if (this.stateTimer <= 0 && (this.state === 'attacking' || this.state === 'hit')) this.state = 'idle';
+                }
+
+                if (this.isAI && this.state === 'idle') this.handleAILogic(opponent);
+            }
+
+            handleAILogic(opponent) {
+                let dist = Math.abs(this.x - opponent.x);
+                // Smart AI reaction checking block status
+                if (opponent.state === 'attacking' && dist < 120 && Math.random() < 0.4) {
+                    this.state = 'blocking';
+                    this.vx = -this.dir * 2;
+                    return;
+                }
+
+                if (dist > 130) {
+                    this.state = 'walking';
+                    this.vx = this.dir * 4.5;
+                } else {
+                    let rand = Math.random();
+                    if (rand < 0.03) this.performAttack('punch');
+                    else if (rand < 0.05) this.performAttack('kick');
+                    else if (rand < 0.07) this.performAttack('uppercut');
+                    else if (rand < 0.08 && this.meter >= 100) this.performAttack('super');
+                }
+            }
+
+            performAttack(type) {
+                if ((this.state === 'attacking' && type !== 'super') || this.state === 'hit') return;
+                if (type === 'super' && this.meter < 100) return;
+
+                if (type === 'super') {
+                    this.meter = 0;
+                    this.updateMeterHUD();
+                    triggerCameraShake(25, 12);
+                }
+
+                this.state = 'attacking'; this.attackType = type;
+
+                if (type === 'punch') {
+                    this.stateTimer = 12; this.vx = this.dir * 7;
+                    checkHitbox(this, 70, 30, -55, 6, 'punch');
+                } else if (type === 'kick') {
+                    this.stateTimer = 18; this.vx = this.dir * 10;
+                    checkHitbox(this, 85, 30, -30, 12, 'kick');
+                } else if (type === 'uppercut') {
+                    this.stateTimer = 28; this.vy = -18; this.vx = this.dir * 5;
+                    checkHitbox(this, 70, 80, -90, 18, 'uppercut');
+                } else if (type === 'hadouken') {
+                    this.stateTimer = 22;
+                    projectiles.push(new EnergyBlast(this.x + (this.dir * 40), this.y - 50, this.dir, this.color));
+                } else if (type === 'super') {
+                    this.stateTimer = 45; this.vx = this.dir * 18;
+                    checkHitbox(this, 120, 90, -90, 35, 'super');
+                }
+            }
+
+            takeDamage(amount, kX, kY) {
+                if (this.state === 'blocking') {
+                    amount = Math.floor(amount * 0.15); // Shield mitigates 85% damage
+                    kX *= 0.2; kY = 0;
+                    createSparks(this.x + (this.dir * 20), this.y - 50, '#ffffff', 4);
+                } else {
+                    this.state = 'hit'; this.stateTimer = 24;
+                    this.vx = kX; this.vy = kY;
+                    triggerCameraShake(15, Math.abs(amount) > 15 ? 10 : 5);
+                    hitStopFrames = Math.abs(amount) > 15 ? 8 : 4; // Hit freeze frames
+                    createSparks(this.x, this.y - 50, this.isAI ? '#ff3333' : '#00d2ff', 12);
+                }
+
+                this.hp = Math.max(0, this.hp - amount);
+                
+                // Meter build on damage received/dealt
+                if(!this.isAI) {
+                    p1.meter = Math.min(100, p1.meter + amount * 0.8);
+                    p1.updateMeterHUD();
+                } else {
+                    ai.meter = Math.min(100, ai.meter + amount * 0.8);
+                    ai.updateMeterHUD();
+                }
+
+                document.getElementById(this.isAI ? 'ai-bar' : 'p1-bar').style.width = this.hp + '%';
+                if (this.hp <= 0) endGame(this.isAI);
+            }
+
+            updateMeterHUD() {
+                document.getElementById(this.isAI ? 'ai-meter' : 'p1-meter').style.width = this.meter + '%';
+            }
+
+            draw() {
+                ctx.save();
+                ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = this.color;
+
+                // Simple blur motion layout
+                this.trail.forEach((t, i) => {
+                    ctx.globalAlpha = (i + 1) * 0.1;
+                    ctx.beginPath(); ctx.arc(t.x, t.y - 80, 10, 0, Math.PI*2); ctx.stroke();
+                });
+                ctx.globalAlpha = 1.0;
+
+                let hY = this.y - 80, cY = this.y - 50, pY = this.y - 30;
+                
+                // Head
+                ctx.beginPath(); ctx.arc(this.x, hY, 14, 0, Math.PI * 2);
+                ctx.fillStyle = this.state === 'blocking' ? '#fff' : this.color;
+                ctx.fill(); ctx.stroke();
+
+                // Spine
+                ctx.beginPath(); ctx.moveTo(this.x, hY + 14); ctx.lineTo(this.x, pY); ctx.stroke();
+
+                // Limbs positioning
+                let lHX = this.x - 16, lHY = cY + 8, rHX = this.x + 16, rHY = cY + 8;
+                let lFX = this.x - 15, lFY = this.y, rFX = this.x + 15, rFY = this.y;
+
+                if (this.state === 'blocking') {
+                    lHX = this.x + (this.dir * 15); lHY = hY + 10;
+                    rHX = this.x + (this.dir * 20); rHY = hY - 5;
+                } else if (this.state === 'attacking') {
+                    if (this.attackType === 'punch') { rHX = this.x + (this.dir * 55); rHY = cY - 15; }
+                    else if (this.attackType === 'kick') { rFX = this.x + (this.dir * 65); rFY = pY - 10; }
+                    else if (this.attackType === 'uppercut') { rHX = this.x + (this.dir * 10); rHY = hY - 45; }
+                    else if (this.attackType === 'super') { rHX = this.x + (this.dir * 70); rHY = cY - 5; ctx.strokeStyle = '#ffcc00'; }
+                } else if (this.state === 'hit') {
+                    lHX = this.x - (this.dir * 25); lHY = hY; rHX = this.x - (this.dir * 15); rHY = hY - 15;
+                }
+
+                ctx.beginPath(); ctx.moveTo(this.x, cY); ctx.lineTo(lHX, lHY);
+                ctx.moveTo(this.x, cY); ctx.lineTo(rHX, rHY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(this.x, pY); ctx.lineTo(lFX, lFY);
+                ctx.moveTo(this.x, pY); ctx.lineTo(rFX, rFY); ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class EnergyBlast {
+            constructor(x, y, dir, color) {
+                this.x = x; this.y = y; this.dir = dir; this.color = color;
+                this.speed = dir * 14; this.active = true;
+            }
+            update(opp) {
+                this.x += this.speed;
+                if (this.x < 0 || this.x > canvas.width) this.active = false;
+                if (Math.abs(this.x - opp.x) < 35 && Math.abs(this.y - (opp.y - 45)) < 50) {
+                    this.active = false;
+                    opp.takeDamage(14, this.dir * 12, -4);
+                }
+            }
+            draw() {
+                ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = this.color;
+                ctx.fillStyle = '#fff'; ctx.beginPath();
+                ctx.arc(this.x, this.y, 18, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            }
+        }
+
+        function checkHitbox(atkr, w, h, offsetTop, dmg, type) {
+            let opp = atkr.isAI ? p1 : ai;
+            let boxX = atkr.dir === 1 ? atkr.x : atkr.x - w;
+            let boxY = atkr.y + offsetTop;
+
+            if (boxX + w > opp.x - 25 && boxX < opp.x + 25 && boxY + h > opp.y - 90 && boxY < opp.y) {
+                let kX = atkr.dir * (type === 'kick' ? 18 : (type === 'super' ? 25 : 8));
+                let kY = type === 'uppercut' ? -22 : (type === 'super' ? -8 : -3);
+                opp.takeDamage(dmg, kX, kY);
+            }
+        }
+
+        function createSparks(x, y, color, count) {
+            for(let i=0; i<count; i++) {
+                effects.push({
+                    x: x, y: y, vx: (Math.random() - 0.5) * 14, vy: (Math.random() - 0.5) * 14,
+                    life: 20, color: color, size: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        function triggerCameraShake(time, intensity) {
+            shakeTime = time; shakeIntensity = intensity;
+        }
+
+        // Controls Bindings Mapping
+        window.addEventListener('keydown', e => {
+            if (!gameRunning) return;
+            let k = e.key.toLowerCase();
+            if (k === 'a') keys.a = true; if (k === 'd') keys.d = true; if (k === 's') keys.s = true;
+            if (e.key === ' ' || k === 'spacebar') triggerJump();
+            if (k === 'q') triggerSkill('punch'); if (k === 'w') triggerSkill('kick');
+            if (k === 'e') triggerSkill('uppercut'); if (k === 'r') triggerSkill('hadouken');
+            if (k === 'f') triggerSkill('super');
+        });
+
+        window.addEventListener('keyup', e => {
+            let k = e.key.toLowerCase();
+            if (k === 'a') keys.a = false; if (k === 'd') keys.d = false; if (k === 's') keys.s = false;
+        });
+
+        function startMove(dirKey) { keys[dirKey] = true; }
+        function stopMove(dirKey) { keys[dirKey] = false; }
+        function triggerJump() { if (p1.y === p1.groundY && p1.state !== 'hit') p1.vy = -20; }
+        function triggerSkill(skill) { if (gameRunning && p1.state !== 'hit') p1.performAttack(skill); }
+
+        function initMatch() {
+            p1 = new Fighter(200, false); ai = new Fighter(800, true);
+            projectiles = []; effects = []; keys = { a: false, d: false, s: false };
+            document.getElementById('p1-bar').style.width = '100%'; document.getElementById('ai-bar').style.width = '100%';
+            p1.updateMeterHUD(); ai.updateMeterHUD();
+            document.getElementById('menu-screen').style.display = 'none'; document.getElementById('end-screen').style.display = 'none';
+            gameRunning = true; requestAnimationFrame(updateLoop);
+        }
+
+        function updateLoop() {
+            if (!gameRunning) return;
+
+            // Handle Hit-Stop Freeze frames to add dramatic weight
+            if (hitStopFrames > 0) {
+                hitStopFrames--;
+                requestAnimationFrame(updateLoop);
+                return;
+            }
+
+            ctx.save();
+            // Screen Shake Rendering Modifier
+            if (shakeTime > 0) {
+                let dx = (Math.random() - 0.5) * shakeIntensity;
+                let dy = (Math.random() - 0.5) * shakeIntensity;
+                ctx.translate(dx, dy); shakeTime--;
+            }
+
+            // Dark Concrete Arena Backdrop
+            ctx.fillStyle = '#14161f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0b0c10'; ctx.fillRect(0, 390, canvas.width, canvas.height - 390);
+            ctx.strokeStyle = '#ff3355'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, 390); ctx.lineTo(canvas.width, 390); ctx.stroke();
+
+            p1.update(ai); ai.update(p1);
+
+            projectiles.forEach((p, idx) => {
+                p.update(p.dir === 1 ? ai : p1); p.draw();
+                if (!p.active) projectiles.splice(idx, 1);
+            });
+
+            effects.forEach((eff, idx) => {
+                eff.x += eff.vx; eff.y += eff.vy; eff.life--;
+                ctx.fillStyle = eff.color;
+                ctx.fillRect(eff.x, eff.y, eff.size, eff.size);
+                if(eff.life <= 0) effects.splice(idx, 1);
+            });
+
+            p1.draw(); ai.draw();
+            ctx.restore();
+
+            requestAnimationFrame(updateLoop);
+        }
+
+        function endGame(isAiLoser) {
+            gameRunning = false;
+            const t = document.getElementById('end-title');
+            t.innerText = isAiLoser ? "VICTORY" : "DEFEAT";
+            t.style.color = isAiLoser ? "#00d2ff" : "#ff3355";
+            document.getElementById('end-screen').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
