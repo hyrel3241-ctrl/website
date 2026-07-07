@@ -3,146 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Fiend - Requiem of Souls Logo</title>
+    <title>Magical Heart for You</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
+
         body {
-            background-color: #050202;
             height: 100vh;
             display: flex;
-            justify-content: center;
-            align-content: center;
-            align-items: center;
-            overflow: hidden;
-            font-family: 'Arial', sans-serif;
-        }
-
-        /* Logo Container */
-        .logo-container {
-            position: relative;
-            width: 500px;
-            height: 500px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* The Ultimate: Requiem Blast Waves */
-        .requiem-wave {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            background: radial-gradient(circle, rgba(255,0,40,0) 40%, rgba(20,0,5,0.8) 70%, rgba(255,10,30,1) 100%);
-            box-shadow: 0 0 40px #ff002b, inset 0 0 30px #ff0000;
-            opacity: 0.7;
-            animation: blast 3s infinite linear;
-        }
-        .w1 { width: 450px; height: 450px; animation-delay: 0s; }
-        .w2 { width: 450px; height: 450px; animation-delay: 1s; }
-        .w3 { width: 450px; height: 450px; animation-delay: 2s; }
-
-        /* Shadow Fiend Silhouette Frame */
-        .sf-silhouette {
-            position: absolute;
-            width: 180px;
-            height: 240px;
-            background: #000000;
-            clip-path: polygon(50% 0%, 65% 20%, 58% 28%, 75% 15%, 72% 38%, 90% 30%, 80% 55%, 95% 65%, 70% 75%, 75% 100%, 50% 90%, 25% 100%, 30% 75%, 5% 65%, 20% 55%, 10% 30%, 28% 38%, 25% 15%, 42% 28%, 35% 20%);
-            box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.6);
-            z-index: 5;
-            filter: drop-shadow(0 0 15px #000000);
-        }
-
-        /* Glowing Demonic Fiend Eyes */
-        .eyes-container {
-            position: absolute;
-            top: 65px;
-            width: 50px;
-            display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            z-index: 10;
-        }
-        .eye {
-            width: 12px;
-            height: 5px;
-            background: #ff5500;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #ff0000, 0 0 5px #fff;
-            transform: rotate(15deg);
-        }
-        .eye.right {
-            transform: rotate(-15deg);
+            align-items: center;
+            background: radial-gradient(circle at center, #2a0813 0%, #0a0105 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            padding: 20px 0;
         }
 
-        /* Eternal Soul Fire Smoke underneath */
-        .soul-abyss {
+        /* Heart Canvas Area */
+        .heart-container {
+            position: relative;
+            width: 100%;
+            height: 50vh; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        /* The Magic Heart Shape */
+        .heart {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            background-color: #ff2a6d;
+            transform: scale(0) rotate(-45deg); /* Starts hidden/invisible */
+            transform-origin: center center;
+            transition: all 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: -10px 10px 90px #ff2a6d, 0 0 30px #ff71ce;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
             position: absolute;
-            bottom: 80px;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, #ff003c 10%, #300008 60%, transparent 100%);
+            width: 140px;
+            height: 140px;
+            background-color: #ff2a6d;
             border-radius: 50%;
-            filter: blur(10px);
-            z-index: 2;
-            opacity: 0.8;
-            animation: pulse 1.5s infinite ease-in-out alternate;
         }
 
-        /* Animations */
-        @keyframes blast {
+        .heart::before {
+            top: -70px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: 70px;
+        }
+
+        /* Triggered Heart Activation Style */
+        .activated .heart {
+            transform: scale(1.1) rotate(-45deg);
+            animation: heartBeat 1.4s infinite alternate 2.5s; /* Starts breathing after growing */
+        }
+
+        /* Romantic Beating/Breathing Loop */
+        @keyframes heartBeat {
             0% {
-                transform: scale(0.2);
-                opacity: 1;
+                transform: scale(1) rotate(-45deg);
+                box-shadow: -10px 10px 70px #ff2a6d, 0 0 20px #ff71ce;
             }
             100% {
-                transform: scale(1.1);
-                opacity: 0;
+                transform: scale(1.15) rotate(-45deg);
+                box-shadow: -10px 10px 110px #ff2a6d, 0 0 50px #ff71ce, 0 0 100px #05d9e8;
             }
         }
 
-        @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 0.6; }
-            100% { transform: scale(1.1); opacity: 0.9; }
+        /* Love Text Styling Area */
+        .love-container {
+            text-align: center;
+            min-height: 90px;
+            padding: 0 15px;
         }
 
-        /* Text branding style */
-        .title {
+        /* Hidden text setting */
+        .love-main {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px #ff71ce, 0 0 30px #ff2a6d, 0 0 50px #01012b;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1.8s ease-out;
+            letter-spacing: 3px;
+            margin: 0;
+        }
+
+        /* Dynamic Javascript Text Fade class */
+        .love-main.show-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Interactive Bottom Button styling */
+        .btn-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 10px;
+        }
+
+        .press-btn {
+            position: relative;
+            padding: 15px 70px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            background: #000;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 20px rgba(255, 42, 109, 0.3);
+            letter-spacing: 3px;
+        }
+
+        .press-btn::before {
+            content: '';
             position: absolute;
-            bottom: 20px;
-            color: #da1a1a;
-            letter-spacing: 6px;
-            font-size: 0.9rem;
-            text-shadow: 0 0 8px rgba(218, 26, 26, 0.6);
-            font-weight: bold;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, #ff2a6d, #9b5de5, #05d9e8);
+            z-index: 1;
+        }
+
+        .press-btn span {
+            position: relative;
+            z-index: 2;
+        }
+
+        .press-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 35px rgba(255, 42, 109, 0.7);
+        }
+        
+        .press-btn:active {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
 
-    <div class="logo-container">
-        <!-- Outward exploding souls -->
-        <div class="requiem-wave w1"></div>
-        <div class="requiem-wave w2"></div>
-        <div class="requiem-wave w3"></div>
-
-        <!-- Flame core base -->
-        <div class="soul-abyss"></div>
-
-        <!-- Nevermore Body Shapes -->
-        <div class="sf-silhouette"></div>
-
-        <!-- Glowing Face Component -->
-        <div class="eyes-container">
-            <div class="eye left"></div>
-            <div class="eye right"></div>
-        </div>
-
-        <div class="title">NEVERMORE</div>
+    <div class="heart-container" id="heartCanvas">
+        <div class="heart"></div>
     </div>
+
+    <div class="love-container">
+        <h1 class="love-main" id="message">You have my whole heart</h1>
+    </div>
+
+    <div class="btn-wrapper">
+        <button class="press-btn" onclick="activateLove()">
+            <span>PRESS</span>
+        </button>
+    </div>
+
+    <script>
+        function activateLove() {
+            // 1. Instantly trigger the neon heart growth sequence
+            const canvas = document.getElementById('heartCanvas');
+            canvas.classList.add('activated');
+
+            // 2. Wait exactly 3 seconds for growth stabilization, then smoothly paint the text 
+            setTimeout(() => {
+                const text = document.getElementById('message');
+                text.classList.add('show-text');
+            }, 3000); 
+        }
+    </script>
 
 </body>
 </html>
