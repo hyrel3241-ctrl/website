@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Special Surprise</title>
+    <title>A Message For You</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,9 +12,9 @@
         }
 
         body {
-            background-color: #121214;
+            background-color: #0b0b0c;
             color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,106 +27,105 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            justify-content: center;
+            min-height: 300px;
         }
 
-        /* Initial prompt message */
+        /* Initial dynamic prompt styling */
         #prompt-text {
-            font-size: 1.5rem;
-            letter-spacing: 1px;
+            font-size: 1.4rem;
             color: #a1a1aa;
-            animation: pulse 1.5s infinite alternate;
-            transition: opacity 0.5s ease;
+            animation: pulse 1.2s infinite alternate;
         }
 
-        /* The hidden picture setup */
-        #kitten-pic {
-            max-width: 400px;
-            width: 90%;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 3px solid #ff4a6b;
-            opacity: 0;
-            transform: scale(0.9);
-            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* The Prank Image */
+        #finger-img {
+            max-width: 200px;
             display: none;
         }
 
-        /* The hidden text setup */
-        #surprise-text {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ff4a6b;
-            text-shadow: 0 2px 10px rgba(255, 74, 107, 0.3);
+        /* The Love Cat Image */
+        #cat-img {
+            max-width: 420px;
+            width: 90%;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(255, 51, 102, 0.25);
+            border: 4px solid #ff3366;
+            display: none;
             opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transform: scale(0.9);
+            transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Trigger classes for animations */
-        #kitten-pic.reveal {
-            display: block;
-            /* Small micro-task delay to allow display block to register for transition */
-            setTimeout: 10ms; 
-        }
-
-        #surprise-text.reveal {
-            opacity: 1;
-            transform: translateY(0);
+        /* Love text layout styling */
+        #love-text {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ff3366;
+            margin-top: 25px;
+            text-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
+            display: none;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
 
         @keyframes pulse {
-            from { opacity: 0.4; }
-            to { opacity: 1; }
+            from { opacity: 0.3; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
     <div id="container">
-        <!-- Step 1: Prompt -->
-        <div id="prompt-text">👉 Press any key on your keyboard...</div>
+        <div id="prompt-text">Press any key for a surprise... 😉</div>
 
-        <!-- Step 2: The Picture -->
-        <img id="kitten-pic" src="program.webp" alt="Cute Kitten with Rose">
+        <img id="finger-img" src="image_5b60c3.png" alt="Prank finger">
 
-        <!-- Step 3: The Text after the picture -->
-        <div id="surprise-text">A rose for you! 🌹</div>
+        <img id="cat-img" src="mwah mwah.webp" alt="Kissing Cat">
+
+        <div id="love-text">kiss for LOVE OF MY LIFE. 💋❤️</div>
     </div>
 
     <script>
-        let activated = false;
+        let triggered = false;
 
         window.addEventListener('keydown', () => {
-            // Prevent restarting if they spam keys
-            if (activated) return;
-            activated = true;
+            if (triggered) return; // Prevent multi-key spamming resets
+            triggered = true;
 
             const prompt = document.getElementById('prompt-text');
-            const pic = document.getElementById('kitten-pic');
-            const text = document.getElementById('surprise-text');
+            const finger = document.getElementById('finger-img');
+            const cat = document.getElementById('cat-img');
+            const text = document.getElementById('love-text');
 
-            // 1. Hide the instruction prompt
-            prompt.style.opacity = '0';
-            
+            // 1. Instantly remove instructions and flash the prank image
+            prompt.style.display = 'none';
+            finger.style.display = 'block';
+
+            // 2. Wait exactly 400 milliseconds (fast prank flash) then swap to the love cat
             setTimeout(() => {
-                prompt.style.display = 'none';
+                finger.style.display = 'none';
+                cat.style.display = 'block';
                 
-                // 2. Bring in the picture smoothly
-                pic.style.display = 'block';
-                // Slight delay so browser registers display:block before rendering animation opacity
+                // Allow browser drawing engine cycle to capture CSS smooth transitions
                 setTimeout(() => {
-                    pic.style.opacity = '1';
-                    pic.style.transform = 'scale(1)';
-                }, 50);
+                    cat.style.opacity = '1';
+                    cat.style.transform = 'scale(1)';
+                }, 20);
 
-                // 3. Bring in the text shortly AFTER the picture arrives
+                // 3. Bring the sweet text down shortly right after the cat kisses
                 setTimeout(() => {
-                    text.classList.add('reveal');
-                }, 1000); // 1000ms = 1 second delay after picture starts appearing
+                    text.style.display = 'block';
+                    setTimeout(() => {
+                        text.style.opacity = '1';
+                        text.style.transform = 'translateY(0)';
+                    }, 20);
+                }, 600);
 
-            }, 500);
+            }, 400); 
         });
-    </script>
+    </script
 </body>
 </html>
