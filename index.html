@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Message For You</title>
+    <title>For My Friend</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,120 +12,142 @@
         }
 
         body {
-            background-color: #0b0b0c;
-            color: #ffffff;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        #container {
-            text-align: center;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             align-items: center;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            padding: 20px 0;
+        }
+
+        /* Container Area */
+        .emoji-container {
+            position: relative;
+            width: 100%;
+            height: 50vh; 
+            display: flex;
             justify-content: center;
-            min-height: 300px;
+            align-items: center;
         }
 
-        /* Initial dynamic prompt styling */
-        #prompt-text {
-            font-size: 1.4rem;
-            color: #a1a1aa;
-            animation: pulse 1.2s infinite alternate;
-        }
-
-        /* The Prank Image */
-        #finger-img {
-            max-width: 200px;
-            display: none;
-        }
-
-        /* The Hidden Kiss GIF */
-        #cat-img {
-            max-width: 420px;
-            width: 90%;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(255, 51, 102, 0.25);
-            border: 4px solid #ff3366;
-            display: none;
+        /* The character image/GIF - Starts hidden above the screen */
+        .middle-finger {
+            width: auto;
+            height: 80%; /* Takes up 80% of the container height */
+            max-width: 90%;
+            object-fit: contain;
+            transform: translateY(-100vh) scale(0.5);
             opacity: 0;
-            transform: scale(0.9);
-            transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+            user-select: none;
         }
 
-        /* Love text layout styling */
-        #love-text {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #ff3366;
-            margin-top: 25px;
-            text-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
-            display: none;
+        /* Dropping/Bouncing Animation when activated */
+        .activated .middle-finger {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            animation: gentleShake 2s ease-in-out infinite alternate 1.2s;
+        }
+
+        @keyframes gentleShake {
+            0% { transform: scale(1) rotate(-3deg); }
+            100% { transform: scale(1.05) rotate(3deg); }
+        }
+
+        /* Text Area */
+        .text-container {
+            text-align: center;
+            min-height: 90px;
+            padding: 0 15px;
+        }
+
+        /* Hidden at start */
+        .friend-text {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #ff3333;
+            text-shadow: 0 0 15px rgba(255, 51, 51, 0.6), 0 0 30px rgba(0, 0, 0, 0.8);
             opacity: 0;
-            transform: translateY(15px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transform: scale(0.5);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 4px;
+            margin: 0;
         }
 
-        @keyframes pulse {
-            from { opacity: 0.3; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
+        /* Pops out after character lands */
+        .friend-text.show-text {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Button Styling */
+        .btn-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 10px;
+        }
+
+        .press-btn {
+            position: relative;
+            padding: 15px 70px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            background: #222;
+            border: 2px solid #ff3333;
+            border-radius: 30px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.2);
+            letter-spacing: 3px;
+        }
+
+        .press-btn:hover {
+            transform: translateY(-3px);
+            background: #ff3333;
+            box-shadow: 0 8px 25px rgba(255, 51, 51, 0.6);
+        }
+        
+        .press-btn:active {
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
 
-    <div id="container">
-        <div id="prompt-text">Press any key for a surprise... 😉</div>
+    <div class="emoji-container" id="stage">
+        <img src="kkkk.gif" alt="Surprise Character" class="middle-finger">
+    </div>
 
-        <img id="finger-img" src="image_5b60c3.png" alt="Prank finger">
+    <div class="text-container">
+        <h1 class="friend-text" id="friendText">GOODMORNING MGA BADING</h1>
+    </div>
 
-        <img id="cat-img" src="tif.gif" alt="Kissing Cat GIF">
-
-        <div id="love-text">kiss for LOVE OF MY LIFE. 💋❤️</div>
+    <div class="btn-wrapper">
+        <button class="press-btn" onclick="dropSurprise()">
+            <span>PRESS</span>
+        </button>
     </div>
 
     <script>
-        let triggered = false;
+        function dropSurprise() {
+            // 1. Drop the character with animation
+            const stage = document.getElementById('stage');
+            stage.classList.add('activated');
 
-        window.addEventListener('keydown', () => {
-            if (triggered) return; // Prevent multi-key spamming resets
-            triggered = true;
-
-            const prompt = document.getElementById('prompt-text');
-            const finger = document.getElementById('finger-img');
-            const cat = document.getElementById('cat-img');
-            const text = document.getElementById('love-text');
-
-            // 1. Instantly remove instructions and flash the prank image
-            prompt.style.display = 'none';
-            finger.style.display = 'block';
-
-            // 2. Wait exactly 400 milliseconds (fast prank flash) then swap to the love cat
+            // 2. Wait 1.2 seconds for the drop to hit, then pop out the text
             setTimeout(() => {
-                finger.style.display = 'none';
-                cat.style.display = 'block';
-                
-                // Allow browser drawing engine cycle to capture CSS smooth transitions
-                setTimeout(() => {
-                    cat.style.opacity = '1';
-                    cat.style.transform = 'scale(1)';
-                }, 20);
-
-                // 3. Bring the sweet text down shortly right after the cat kisses
-                setTimeout(() => {
-                    text.style.display = 'block';
-                    setTimeout(() => {
-                        text.style.opacity = '1';
-                        text.style.transform = 'translateY(0)';
-                    }, 20);
-                }, 600);
-
-            }, 400); 
-        });
+                const text = document.getElementById('friendText');
+                text.classList.add('show-text');
+            }, 1200); 
+        }
     </script>
+
 </body>
 </html>
