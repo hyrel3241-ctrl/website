@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerb — Buy or rent cars</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #14161a;
+            --surface: #1b1e23;
+            --card: #22262c;
+            --card-hover: #282d34;
+            --border: #31363d;
+            --text: #f2f0ea;
+            --muted: #9ca3ac;
+            --dim: #6b7178;
+            --amber: #e8b84b;
+            --amber-dim: #8a692a;
+            --green: #5fa88a;
+            --green-dim: #33513f;
+            --red: #e2665a;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .display {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        ::selection {
+            background: var(--amber);
+            color: #241b06;
+        }
+
+        /* ---------- layout shell ---------- */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        /* ---------- topbar ---------- */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(20, 22, 26, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .plate {
+            border: 2px solid var(--text);
+            border-radius: 4px;
+            padding: 3px 9px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.12em;
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 9px 14px;
+            border-radius: 8px;
+            letter-spacing: 0.02em;
+            transition: all .15s;
+        }
+
+        .nav-btn:hover {
+            color: var(--text);
+            background: var(--card);
+        }
+
+        .nav-btn.active {
+            color: var(--bg);
+            background: var(--amber);
+        }
+
+        .role-toggle {
+            display: flex;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .role-toggle button {
+            border: none;
+            background: none;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all .15s;
+        }
+
+        .role-toggle button.active {
+            background: var(--amber);
+            color: #241b06;
+        }
+
+        .garage-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .garage-btn:hover {
+            border-color: var(--amber);
+        }
+
+        .garage-count {
+            background: var(--amber);
+            color: #241b06;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 999px;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* ---------- hero ---------- */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .hero-inner {
+            padding: 72px 0 56px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--amber);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--amber);
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            line-height: 1.02;
+            margin: 0 0 18px;
+            max-width: 680px;
+        }
+
+        .hero h1 .accent {
+            color: var(--amber);
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--muted);
+            max-width: 520px;
+            line-height: 1.6;
+            margin: 0 0 34px;
+        }
+
+        .hero-car {
+            position: absolute;
+            right: -40px;
+            bottom: -10px;
+            width: 520px;
+            opacity: 0.9;
+            z-index: 1;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4));
+        }
+
+        .quicksearch {
+            display: flex;
+            gap: 10px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            max-width: 640px;
+            flex-wrap: wrap;
+        }
+
+        .quicksearch select,
+        .quicksearch input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .quicksearch button {
+            background: var(--amber);
+            color: #241b06;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 22px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .quicksearch button:hover {
+            background: #f0c665;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 36px;
+            margin-top: 38px;
+        }
+
+        .stat-row div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-num {
+            font-family: 'Oswald';
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 2px;
+        }
+
+        /* ---------- filter bar ---------- */
+        .filterbar {
+            position: sticky;
+            top: 61px;
+            z-index: 30;
+            background: rgba(20, 22, 26, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+
+        .filterbar-inner {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chip-group {
+            display: flex;
+            gap: 6px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 3px;
+        }
+
+        .chip {
+            border: none;
+            background: none;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .chip.active {
+            background: var(--amber);
+            color: #241b06;
+        }
+
+        .filterbar select,
+        .filterbar input[type=text] {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .filterbar input[type=text] {
+            min-width: 200px;
+        }
+
+        .filter-spacer {
+            flex: 1;
+        }
+
+        .result-count {
+            font-size: 12px;
+            color: var(--dim);
+        }
+
+        /* ---------- grid & cards ---------- */
+        .section-pad {
+            padding: 40px 0 80px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 20px;
+        }
+
+        .car-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: border-color .15s, transform .15s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .car-card:hover {
+            border-color: var(--amber);
+            transform: translateY(-2px);
+        }
+
+        .car-media {
+            position: relative;
+            height: 150px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .car-media svg {
+            width: 82%;
+            height: auto;
+        }
+
+        .heart-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(20, 22, 26, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+        }
+
+        .heart-btn.saved {
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .status-pill {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 9px;
+            border-radius: 999px;
+        }
+
+        .status-available {
+            background: var(--green-dim);
+            color: #bfe9d5;
+        }
+
+        .status-booked {
+            background: #4a3a20;
+            color: var(--amber);
+        }
+
+        .status-maintenance {
+            background: #3d2323;
+            color: var(--red);
+        }
+
+        .car-body {
+            padding: 16px 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .car-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .car-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .car-brand {
+            font-size: 11px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin: 2px 0 0;
+        }
+
+        .car-plate {
+            border: 1.5px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: 'JetBrains Mono';
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .car-plate.buy {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .car-plate.rent {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .car-specs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .car-specs span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .car-cta {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .car-price {
+            font-family: 'JetBrains Mono';
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .car-price small {
+            color: var(--dim);
+            font-weight: 400;
+            font-size: 11px;
+        }
+
+        .view-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 13px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .view-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state h3 {
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        /* ---------- section headers ---------- */
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .section-head h2 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .section-head p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        /* ---------- modal ---------- */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 11, 13, 0.72);
+            z-index: 100;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            max-width: 760px;
+            width: 100%;
+            animation: modalIn .18s ease-out;
+        }
+
+        .modal.small {
+            max-width: 420px;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-head h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+            border-color: var(--amber);
+        }
+
+        .modal-body {
+            padding: 22px;
+        }
+
+        .modal-foot {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .detail-media {
+            background: var(--card);
+            border-radius: 10px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .detail-media svg {
+            width: 60%;
+            height: auto;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 18px 0;
+        }
+
+        .spec-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 13px;
+        }
+
+        .spec-box .k {
+            font-size: 10px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 3px;
+        }
+
+        .spec-box .v {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono';
+        }
+
+        .detail-desc {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.65;
+            margin: 16px 0;
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: var(--amber);
+            color: #241b06;
+            border: none;
+            padding: 13px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .btn-primary:hover {
+            background: #f0c665;
+        }
+
+        .btn-primary.rent {
+            background: var(--green);
+            color: #0d211a;
+        }
+
+        .btn-primary.rent:hover {
+            background: #72c3a2;
+        }
+
+        .btn-ghost {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 13px 18px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--text);
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: #2c0f0c;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        /* ---------- forms ---------- */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11.5px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13.5px;
+            font-family: inherit;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--amber);
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* ---------- garage ---------- */
+        .garage-empty {
+            text-align: center;
+            padding: 90px 20px;
+        }
+
+        /* ---------- admin ---------- */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .gauge {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .gauge span {
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono';
+            background: var(--card);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card .lbl {
+            font-size: 11px;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card .num {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Oswald';
+            margin-top: 2px;
+        }
+
+        .admin-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .add-btn {
+            background: var(--amber);
+            color: #241b06;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .add-btn:hover {
+            background: #f0c665;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--dim);
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        tbody td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--card-hover);
+        }
+
+        .id-plate {
+            font-family: 'JetBrains Mono';
+            font-size: 11px;
+            color: var(--dim);
+        }
+
+        .status-select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 11.5px;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+
+        .icon-btn:hover {
+            color: var(--text);
+            border-color: var(--amber);
+        }
+
+        .icon-btn.del:hover {
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: var(--bg);
+            padding: 13px 22px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 600;
+            z-index: 200;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            animation: toastIn .2s ease-out;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 26px 0;
+            margin-top: 20px;
+        }
+
+        footer .wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--dim);
+        }
+
+        @media (max-width:860px) {
+            .hero-car {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 38px;
+            }
+
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="topbar">
+            <div class="wrap topbar-inner">
+                <div class="brand" onclick="goHome()">
+                    <div class="plate">KERB</div>
+                    <div class="brand-sub">buy&nbsp;/&nbsp;rent</div>
+                </div>
+                <nav class="nav" id="mainNav"></nav>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="garage-btn" id="garageBtn" onclick="setUserSubview('garage')">
+                        <span>Garage</span><span class="garage-count" id="garageCount">0</span>
+                    </button>
+                    <div class="role-toggle">
+                        <button id="roleUserBtn" onclick="setRole('user')">User</button>
+                        <button id="roleAdminBtn" onclick="setRole('admin')">Admin</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main id="main"></main>
+        <footer>
+            <div class="wrap">
+                <span>Kerb — a demo marketplace. Not a real dealership.</span>
+                <span class="mono" id="clock"></span>
+            </div>
+        </footer>
+    </div>
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+
+    <script>
+        /* ============ DATA ============ */
+        let cars = [
+            { id: 1, name: 'Solace GT', brand: 'Halcyon', bodyType: 'Sedan', year: 2024, price: 28500, rentPrice: 79, listingType: 'both', mileage: 8200, transmission: 'Automatic', fuel: 'Petrol', seats: 5, status: 'available', color: '#e8b84b', rating: 4.8, desc: 'A refined executive sedan built for long highway stretches — quiet cabin, adaptive cruise, and a ride that soaks up bad tarmac without complaint.' },
+            { id: 2, name: 'Atlas Trailhawk', brand: 'Terra', bodyType: 'SUV', year: 2023, price: 41200, rentPrice: 109, listingType: 'both', mileage: 15400, transmission: 'Automatic', fuel: 'Diesel', seats: 7, status: 'available', color: '#5fa88a', rating: 4.6, desc: 'Three rows, real ground clearance, and a locking rear diff for the days the trail gets serious. Comfortable enough for the school run too.' },
+            { id: 3, name: 'Nimbus EV', brand: 'Voyager', bodyType: 'Electric', year: 2025, price: 36900, rentPrice: 95, listingType: 'both', mileage: 2100, transmission: 'Automatic', fuel: 'Electric', seats: 5, status: 'booked', color: '#7fb8e8', rating: 4.9, desc: '320 miles of range and a cabin that feels lifted from a lounge, not a car. Instant torque, near-silent at speed.' },
+            { id: 4, name: 'Falcon Roadster', brand: 'Vantage', bodyType: 'Sports', year: 2024, price: 64500, rentPrice: 189, listingType: 'rent', mileage: 4300, transmission: 'Manual', fuel: 'Petrol', seats: 2, status: 'available', color: '#e2665a', rating: 4.7, desc: 'A weekend car in the purest sense — manual gearbox, low seating, and a naturally aspirated six that wants to be revved.' },
+            { id: 5, name: 'Comet Hatch', brand: 'Nimble', bodyType: 'Hatchback', year: 2022, price: 14200, rentPrice: 45, listingType: 'both', mileage: 22100, transmission: 'Manual', fuel: 'Petrol', seats: 5, status: 'available', color: '#c99bd8', rating: 4.3, desc: 'Cheap to run, easy to park, and surprisingly fun through a roundabout. The obvious pick for a first car or a city runabout.' },
+            { id: 6, name: 'Voyager Wagon', brand: 'Terra', bodyType: 'Wagon', year: 2023, price: 26800, rentPrice: 74, listingType: 'buy', mileage: 18700, transmission: 'Automatic', fuel: 'Petrol', seats: 5, status: 'available', color: '#9ca3ac', rating: 4.4, desc: 'A load-lugging wagon with a proper 600L boot and roof rails ready for the bikes. Understated, not boring.' },
+            { id: 7, name: 'Ridgeline Pickup', brand: 'Ironclad', bodyType: 'Truck', year: 2021, price: 31900, rentPrice: 99, listingType: 'both', mileage: 31200, transmission: 'Automatic', fuel: 'Diesel', seats: 5, status: 'maintenance', color: '#b98b4e', rating: 4.2, desc: 'Tows 3,500kg, hauls a full sheet of plywood flat in the bed, and still rides decent unloaded. Built to be used, not babied.' },
+            { id: 8, name: 'Halcyon Coupe', brand: 'Halcyon', bodyType: 'Coupe', year: 2024, price: 38700, rentPrice: 112, listingType: 'both', mileage: 6100, transmission: 'Automatic', fuel: 'Petrol', seats: 4, status: 'available', color: '#e8b84b', rating: 4.6, desc: 'Two doors, a long bonnet, and a chassis tuned for back roads rather than the school run — though it will do that too.' },
+            { id: 9, name: 'Terra Prime EV', brand: 'Terra', bodyType: 'SUV', year: 2025, price: 47500, rentPrice: 129, listingType: 'both', mileage: 1200, transmission: 'Automatic', fuel: 'Electric', seats: 5, status: 'available', color: '#5fa88a', rating: 4.9, desc: 'An electric SUV with air suspension and a 280-mile range, built for families who still want it to feel special on a Sunday drive.' },
+            { id: 10, name: 'Nimble City', brand: 'Nimble', bodyType: 'Hatchback', year: 2023, price: 12600, rentPrice: 39, listingType: 'rent', mileage: 11400, transmission: 'Automatic', fuel: 'Petrol', seats: 4, status: 'available', color: '#c99bd8', rating: 4.1, desc: 'Tiny turning circle, big infotainment screen, and a price that makes it an easy weekend rental for a city break.' },
+        ];
+        let nextId = 11;
+        let wishlist = new Set();
+        let state = { role: 'user', userSubview: 'home', filters: { type: 'all', bodyType: 'all', search: '', sort: 'featured' } };
+        let activeCarId = null, bookingCarId = null, editCarId = null, deleteCarId = null;
+
+        /* ============ ICONS (inline SVG, generic - not brand car silhouettes) ============ */
+        function carSVG(color, size) {
+            return `<svg viewBox="0 0 220 100" style="width:${size || '100%'}">
+    <ellipse cx="110" cy="86" rx="95" ry="6" fill="#000" opacity="0.25"/>
+    <path d="M20 72 Q14 50 34 44 L52 26 Q60 18 76 18 L142 18 Q156 18 165 28 L184 44 Q204 48 200 72 Z" fill="${color}" opacity="0.92"/>
+    <path d="M60 42 L74 24 Q80 20 90 20 L134 20 Q144 20 150 28 L160 42 Z" fill="#14161a" opacity="0.55"/>
+    <circle cx="58" cy="74" r="16" fill="#14161a"/>
+    <circle cx="58" cy="74" r="7" fill="#4a4f57"/>
+    <circle cx="164" cy="74" r="16" fill="#14161a"/>
+    <circle cx="164" cy="74" r="7" fill="#4a4f57"/>
+    <rect x="182" y="52" width="10" height="6" rx="2" fill="#fff" opacity="0.85"/>
+    <rect x="26" y="54" width="9" height="5" rx="2" fill="#e2665a" opacity="0.8"/>
+  </svg>`;
+        }
+        const ic = {
+            heart: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.3-9.3-8.2C.8 9.6 1.8 5.9 5 4.6c2.1-.9 4.3-.2 5.7 1.6.4.5 1.2.5 1.6 0C13.7 4.4 15.9 3.7 18 4.6c3.2 1.3 4.2 5 2.3 8.2C18.7 16.7 12 21 12 21z"/></svg>',
+            heartOutline: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-6.7-4.3-9.3-8.2C.8 9.6 1.8 5.9 5 4.6c2.1-.9 4.3-.2 5.7 1.6.4.5 1.2.5 1.6 0C13.7 4.4 15.9 3.7 18 4.6c3.2 1.3 4.2 5 2.3 8.2C18.7 16.7 12 21 12 21z"/></svg>',
+            seat: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v9a3 3 0 003 3h6M6 4H4M6 4h2M18 21v-5a3 3 0 00-3-3H6"/></svg>',
+            gauge: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4"/></svg>',
+            fuel: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V6a2 2 0 012-2h6a2 2 0 012 2v15M4 21h10M16 8l2.5 2.5A2 2 0 0119 12v5a1.5 1.5 0 003 0V9l-3-3"/></svg>',
+            gear: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1h.1a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>',
+        };
+
+        /* ============ HELPERS ============ */
+        function fmtMoney(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+        function findCar(id) { return cars.find(c => c.id === id); }
+        function toast(msg) {
+            const root = document.getElementById('toast-root');
+            root.innerHTML = `<div class="toast">${msg}</div>`;
+            setTimeout(() => { if (root.firstChild) root.innerHTML = ''; }, 2600);
+        }
+        function statusLabel(s) { return s === 'available' ? 'Available' : s === 'booked' ? 'Booked' : 'In service'; }
+
+        /* ============ NAV / ROLE ============ */
+        function setRole(role) {
+            state.role = role;
+            document.getElementById('roleUserBtn').classList.toggle('active', role === 'user');
+            document.getElementById('roleAdminBtn').classList.toggle('active', role === 'admin');
+            render();
+        }
+        function goHome() { state.role = 'user'; state.userSubview = 'home'; setRole('user'); }
+        function setUserSubview(v) { state.role = 'user'; state.userSubview = v; setRole('user'); }
+        function renderNav() {
+            const nav = document.getElementById('mainNav');
+            if (state.role !== 'user') { nav.innerHTML = ''; return; }
+            nav.innerHTML = `
+    <button class="nav-btn ${state.userSubview === 'home' ? 'active' : ''}" onclick="setUserSubview('home')">Browse</button>
+    <button class="nav-btn ${state.userSubview === 'garage' ? 'active' : ''}" onclick="setUserSubview('garage')">My garage</button>
+  `;
+        }
+
+        /* ============ FILTER LOGIC ============ */
+        function filteredCars() {
+            let list = cars.filter(c => {
+                if (state.filters.type !== 'all' && c.listingType !== 'both' && c.listingType !== state.filters.type) return false;
+                if (state.filters.type !== 'all' && c.listingType === 'both') {/* both always qualifies */ }
+                if (state.filters.bodyType !== 'all' && c.bodyType !== state.filters.bodyType) return false;
+                if (state.filters.search) {
+                    const q = state.filters.search.toLowerCase();
+                    if (!(c.name.toLowerCase().includes(q) || c.brand.toLowerCase().includes(q) || c.bodyType.toLowerCase().includes(q))) return false;
+                }
+                return true;
+            });
+            if (state.filters.sort === 'price-low') list.sort((a, b) => a.price - b.price);
+            else if (state.filters.sort === 'price-high') list.sort((a, b) => b.price - a.price);
+            else if (state.filters.sort === 'newest') list.sort((a, b) => b.year - a.year);
+            else if (state.filters.sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+            return list;
+        }
+        function setFilterType(t) { state.filters.type = t; renderMain(); }
+        function setFilterBody(v) { state.filters.bodyType = v; renderMain(); }
+        function setFilterSearch(v) { state.filters.search = v; renderMain(); }
+        function setFilterSort(v) { state.filters.sort = v; renderMain(); }
+        function quickSearch() {
+            const type = document.getElementById('qsType').value;
+            const body = document.getElementById('qsBody').value;
+            const q = document.getElementById('qsQuery').value;
+            state.filters = { type, bodyType: body, search: q, sort: 'featured' };
+            document.getElementById('main').querySelector('.filterbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            renderMain();
+        }
+
+        /* ============ WISHLIST ============ */
+        function toggleWishlist(id, ev) {
+            if (ev) ev.stopPropagation();
+            if (wishlist.has(id)) wishlist.delete(id); else wishlist.add(id);
+            document.getElementById('garageCount').textContent = wishlist.size;
+            renderMain();
+        }
+
+        /* ============ CARD / GRID RENDER ============ */
+        function carCard(c) {
+            const saved = wishlist.has(c.id);
+            const priceLabel = c.listingType === 'rent' ? `${fmtMoney(c.rentPrice)}<small> /day</small>` :
+                c.listingType === 'buy' ? `${fmtMoney(c.price)}` : `${fmtMoney(c.price)}<small> or ${fmtMoney(c.rentPrice)}/day</small>`;
+            const plateLabel = c.listingType === 'rent' ? 'RENT' : c.listingType === 'buy' ? 'FOR SALE' : 'BUY / RENT';
+            const plateClass = c.listingType === 'rent' ? 'rent' : 'buy';
+            return `
+  <div class="car-card" onclick="openDetail(${c.id})">
+    <div class="car-media">
+      <span class="status-pill status-${c.status}">${statusLabel(c.status)}</span>
+      <button class="heart-btn ${saved ? 'saved' : ''}" onclick="toggleWishlist(${c.id}, event)" aria-label="Save to garage">${saved ? ic.heart : ic.heartOutline}</button>
+      ${carSVG(c.color)}
+    </div>
+    <div class="car-body">
+      <div class="car-top">
+        <div>
+          <p class="car-name">${c.name}</p>
+          <p class="car-brand">${c.brand} · ${c.year}</p>
+        </div>
+        <span class="car-plate ${plateClass}">${plateLabel}</span>
+      </div>
+      <div class="car-specs">
+        <span>${ic.gauge} ${c.mileage.toLocaleString()} mi</span>
+        <span>${ic.gear} ${c.transmission}</span>
+        <span>${ic.seat} ${c.seats} seats</span>
+        <span>${ic.fuel} ${c.fuel}</span>
+      </div>
+      <div class="car-cta">
+        <span class="car-price">${priceLabel}</span>
+        <button class="view-btn" onclick="openDetail(${c.id}); event.stopPropagation();">Details</button>
+      </div>
+    </div>
+  </div>`;
+        }
+
+        function renderHome() {
+            const list = filteredCars();
+            const bodyTypes = [...new Set(cars.map(c => c.bodyType))].sort();
+            return `
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-eyebrow">${cars.filter(c => c.status === 'available').length} cars ready this week</div>
+      <h1>Find the car<br>that fits the <span class="accent">next chapter.</span></h1>
+      <p>Buy outright or rent by the day. No dealership small talk, no hidden fees — just a clean garage of cars ready to go.</p>
+      <div class="quicksearch">
+        <select id="qsType"><option value="all">Buy or rent</option><option value="buy">Buy</option><option value="rent">Rent</option></select>
+        <select id="qsBody"><option value="all">Any body type</option>${bodyTypes.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+        <input id="qsQuery" type="text" placeholder="Search make or model" />
+        <button onclick="quickSearch()">Search</button>
+      </div>
+      <div class="stat-row">
+        <div><span class="stat-num">${cars.length}</span><span class="stat-lbl">Cars listed</span></div>
+        <div><span class="stat-num">${new Set(cars.map(c => c.brand)).size}</span><span class="stat-lbl">Makes</span></div>
+        <div><span class="stat-num">4.6</span><span class="stat-lbl">Avg. rating</span></div>
+      </div>
+    </div>
+    <svg class="hero-car" viewBox="0 0 220 100">${carSVG('#e8b84b', '100%').replace(/<svg[^>]*>|<\/svg>/g, '')}</svg>
+  </section>
+
+  <div class="filterbar">
+    <div class="wrap filterbar-inner">
+      <div class="chip-group">
+        ${['all', 'buy', 'rent'].map(t => `<button class="chip ${state.filters.type === t ? 'active' : ''}" onclick="setFilterType('${t}')">${t === 'all' ? 'All' : t}</button>`).join('')}
+      </div>
+      <select onchange="setFilterBody(this.value)">
+        <option value="all">Any body type</option>
+        ${bodyTypes.map(b => `<option value="${b}" ${state.filters.bodyType === b ? 'selected' : ''}>${b}</option>`).join('')}
+      </select>
+      <select onchange="setFilterSort(this.value)">
+        <option value="featured" ${state.filters.sort === 'featured' ? 'selected' : ''}>Featured</option>
+        <option value="price-low" ${state.filters.sort === 'price-low' ? 'selected' : ''}>Price: low to high</option>
+        <option value="price-high" ${state.filters.sort === 'price-high' ? 'selected' : ''}>Price: high to low</option>
+        <option value="newest" ${state.filters.sort === 'newest' ? 'selected' : ''}>Newest year</option>
+        <option value="rating" ${state.filters.sort === 'rating' ? 'selected' : ''}>Top rated</option>
+      </select>
+      <input type="text" placeholder="Search make or model" value="${state.filters.search}" oninput="setFilterSearch(this.value)" />
+      <div class="filter-spacer"></div>
+      <span class="result-count">${list.length} car${list.length === 1 ? '' : 's'}</span>
+    </div>
+  </div>
+
+  <section class="section-pad wrap">
+    ${list.length ? `<div class="grid">${list.map(carCard).join('')}</div>` :
+                    `<div class="empty-state"><h3>No cars match those filters</h3><p>Try widening the search or clearing a filter.</p></div>`}
+  </section>`;
+        }
+
+        function renderGarage() {
+            const saved = cars.filter(c => wishlist.has(c.id));
+            return `
+  <section class="section-pad wrap" style="padding-top:40px;">
+    <div class="section-head">
+      <div>
+        <h2>My garage</h2>
+        <p>Cars you've saved for later.</p>
+      </div>
+    </div>
+    ${saved.length ? `<div class="grid">${saved.map(carCard).join('')}</div>` :
+                    `<div class="garage-empty"><h3 style="font-family:'Oswald'; text-transform:uppercase; margin-bottom:8px;">Your garage is empty</h3>
+      <p style="color:var(--muted); margin-bottom:20px;">Tap the heart on any car to keep it here.</p>
+      <button class="btn-primary" style="max-width:200px; margin:0 auto;" onclick="setUserSubview('home')">Browse cars</button></div>`}
+  </section>`;
+        }
+
+        /* ============ DETAIL MODAL ============ */
+        function openDetail(id) { activeCarId = id; renderModal(); }
+        function closeModal() { activeCarId = null; bookingCarId = null; editCarId = null; deleteCarId = null; renderModal(); }
+        function detailModal() {
+            const c = findCar(activeCarId);
+            if (!c) return '';
+            const canBuy = c.listingType === 'buy' || c.listingType === 'both';
+            const canRent = c.listingType === 'rent' || c.listingType === 'both';
+            const disabled = c.status !== 'available';
+            return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>${c.name}</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-media">${carSVG(c.color, '55%')}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <p style="margin:0; color:var(--dim); font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">${c.brand} · ${c.bodyType}</p>
+            <p class="mono" style="margin:4px 0 0; font-size:22px; font-weight:700;">${c.listingType === 'rent' ? fmtMoney(c.rentPrice) + ' /day' : fmtMoney(c.price)}</p>
+          </div>
+          <span class="status-pill status-${c.status}" style="position:static;">${statusLabel(c.status)}</span>
+        </div>
+        <p class="detail-desc">${c.desc}</p>
+        <div class="detail-grid">
+          <div class="spec-box"><div class="k">Year</div><div class="v">${c.year}</div></div>
+          <div class="spec-box"><div class="k">Mileage</div><div class="v">${c.mileage.toLocaleString()} mi</div></div>
+          <div class="spec-box"><div class="k">Transmission</div><div class="v">${c.transmission}</div></div>
+          <div class="spec-box"><div class="k">Fuel</div><div class="v">${c.fuel}</div></div>
+          <div class="spec-box"><div class="k">Seats</div><div class="v">${c.seats}</div></div>
+          <div class="spec-box"><div class="k">Rating</div><div class="v">${c.rating} / 5</div></div>
+        </div>
+        <div class="cta-row">
+          ${canBuy ? `<button class="btn-primary" ${disabled ? 'disabled style="opacity:.4;cursor:not-allowed;"' : ''} onclick="openBooking(${c.id},'buy')">Buy now</button>` : ''}
+          ${canRent ? `<button class="btn-primary rent" ${disabled ? 'disabled style="opacity:.4;cursor:not-allowed;"' : ''} onclick="openBooking(${c.id},'rent')">Rent this car</button>` : ''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+        }
+
+        /* ============ BOOKING MODAL ============ */
+        function openBooking(id, mode) { activeCarId = null; bookingCarId = id; bookingMode = mode; renderModal(); }
+        let bookingMode = 'buy';
+        function submitBooking(ev) {
+            ev.preventDefault();
+            const c = findCar(bookingCarId);
+            c.status = 'booked';
+            closeModal();
+            toast(bookingMode === 'rent' ? `${c.name} reserved. Confirmation sent to your email.` : `${c.name} — purchase request sent. We'll be in touch.`);
+            renderMain();
+        }
+        function bookingModal() {
+            const c = findCar(bookingCarId);
+            if (!c) return '';
+            const isRent = bookingMode === 'rent';
+            return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal small">
+      <div class="modal-head">
+        <h3>${isRent ? 'Rent' : 'Buy'} — ${c.name}</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form onsubmit="submitBooking(event)">
+        <div class="modal-body">
+          <div class="field"><label>Full name</label><input type="text" required placeholder="Alex Rivera"></div>
+          <div class="field"><label>Email</label><input type="email" required placeholder="alex@email.com"></div>
+          <div class="field"><label>Phone</label><input type="tel" required placeholder="+1 (555) 000-0000"></div>
+          ${isRent ? `
+          <div class="field-row">
+            <div class="field"><label>Pick-up date</label><input type="date" required></div>
+            <div class="field"><label>Return date</label><input type="date" required></div>
+          </div>` : `
+          <div class="field"><label>Preferred contact time</label><select><option>Morning</option><option>Afternoon</option><option>Evening</option></select></div>`}
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary ${isRent ? 'rent' : ''}" style="flex:none;">${isRent ? 'Confirm reservation' : 'Send purchase request'}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+        }
+
+        /* ============ MODAL ROUTER ============ */
+        function renderModal() {
+            const root = document.getElementById('modal-root');
+            if (activeCarId) root.innerHTML = detailModal();
+            else if (bookingCarId) root.innerHTML = bookingModal();
+            else if (editCarId !== null) root.innerHTML = editModal();
+            else if (deleteCarId) root.innerHTML = deleteModal();
+            else root.innerHTML = '';
+        }
+
+        /* ============ ADMIN ============ */
+        function gaugeStyle(pct, color) {
+            return `background:conic-gradient(${color} ${pct * 3.6}deg, var(--border) 0deg);`;
+        }
+        function renderAdmin() {
+            const total = cars.length;
+            const available = cars.filter(c => c.status === 'available').length;
+            const booked = cars.filter(c => c.status === 'booked').length;
+            const avgPrice = Math.round(cars.reduce((a, c) => a + c.price, 0) / total);
+            const availPct = Math.round((available / total) * 100);
+            const bookedPct = Math.round((booked / total) * 100);
+            const garagePct = Math.min(100, Math.round((wishlist.size / total) * 100));
+            return `
+  <section class="section-pad wrap" style="padding-top:36px;">
+    <div class="section-head">
+      <div><h2>Inventory dashboard</h2><p>Manage listings, pricing and availability.</p></div>
+      <button class="add-btn" onclick="openEdit(null)">+ Add car</button>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card">
+        <div class="gauge" style="${gaugeStyle(100, '#e8b84b')}"><span>${total}</span></div>
+        <div><div class="lbl">Total listings</div><div class="num">${total} cars</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="gauge" style="${gaugeStyle(availPct, '#5fa88a')}"><span>${availPct}%</span></div>
+        <div><div class="lbl">Available now</div><div class="num">${available} cars</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="gauge" style="${gaugeStyle(bookedPct, '#e2665a')}"><span>${bookedPct}%</span></div>
+        <div><div class="lbl">Booked / sold</div><div class="num">${booked} cars</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="gauge" style="${gaugeStyle(garagePct, '#7fb8e8')}"><span>${fmtMoney(avgPrice).replace('$', '')}</span></div>
+        <div><div class="lbl">Avg. list price</div><div class="num">${fmtMoney(avgPrice)}</div></div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Car</th><th>Type</th><th>Listing</th><th>Price</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${cars.map(c => `
+        <tr>
+          <td class="id-plate">#${String(c.id).padStart(3, '0')}</td>
+          <td><strong>${c.name}</strong><br><span style="color:var(--dim); font-size:11.5px;">${c.brand} · ${c.year}</span></td>
+          <td>${c.bodyType}</td>
+          <td style="text-transform:capitalize;">${c.listingType}</td>
+          <td class="mono">${c.listingType === 'rent' ? fmtMoney(c.rentPrice) + '/day' : fmtMoney(c.price)}</td>
+          <td>
+            <select class="status-select" onchange="updateStatus(${c.id}, this.value)">
+              <option value="available" ${c.status === 'available' ? 'selected' : ''}>Available</option>
+              <option value="booked" ${c.status === 'booked' ? 'selected' : ''}>Booked</option>
+              <option value="maintenance" ${c.status === 'maintenance' ? 'selected' : ''}>In service</option>
+            </select>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn" onclick="openEdit(${c.id})" aria-label="Edit">${editIcon()}</button>
+              <button class="icon-btn del" onclick="askDelete(${c.id})" aria-label="Delete">${trashIcon()}</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </section>`;
+        }
+        function editIcon() { return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'; }
+        function trashIcon() { return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>'; }
+
+        function updateStatus(id, status) {
+            const c = findCar(id); c.status = status;
+            toast(`${c.name} marked ${statusLabel(status).toLowerCase()}.`);
+            renderMain();
+        }
+        function askDelete(id) { deleteCarId = id; renderModal(); }
+        function confirmDelete() {
+            const c = findCar(deleteCarId);
+            cars = cars.filter(x => x.id !== deleteCarId);
+            wishlist.delete(deleteCarId);
+            document.getElementById('garageCount').textContent = wishlist.size;
+            closeModal();
+            toast(`${c.name} removed from inventory.`);
+            renderMain();
+        }
+        function deleteModal() {
+            const c = findCar(deleteCarId);
+            return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal small">
+      <div class="modal-head"><h3>Remove listing?</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <p style="color:var(--muted); font-size:13.5px; line-height:1.6;">This deletes <strong style="color:var(--text);">${c.name}</strong> from the inventory. This can't be undone.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDelete()">Delete car</button>
+      </div>
+    </div>
+  </div>`;
+        }
+
+        /* ============ ADD / EDIT ============ */
+        function openEdit(id) { editCarId = id === null ? 'new' : id; renderModal(); }
+        function editModal() {
+            const isNew = editCarId === 'new';
+            const c = isNew ? { name: '', brand: '', bodyType: 'Sedan', year: 2024, price: 20000, rentPrice: 60, listingType: 'both', mileage: 0, transmission: 'Automatic', fuel: 'Petrol', seats: 5, status: 'available', desc: '', color: '#e8b84b' } : findCar(editCarId);
+            return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>${isNew ? 'Add a car' : 'Edit ' + c.name}</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form onsubmit="saveCar(event, ${isNew ? 'null' : c.id})">
+        <div class="modal-body">
+          <div class="field-row">
+            <div class="field"><label>Model name</label><input name="name" required value="${c.name}" placeholder="Solace GT"></div>
+            <div class="field"><label>Brand</label><input name="brand" required value="${c.brand}" placeholder="Halcyon"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Body type</label>
+              <select name="bodyType">
+                ${['Sedan', 'SUV', 'Sports', 'Electric', 'Hatchback', 'Wagon', 'Truck', 'Coupe'].map(b => `<option ${c.bodyType === b ? 'selected' : ''}>${b}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field"><label>Year</label><input name="year" type="number" required value="${c.year}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Listing type</label>
+              <select name="listingType">
+                <option value="buy" ${c.listingType === 'buy' ? 'selected' : ''}>Buy only</option>
+                <option value="rent" ${c.listingType === 'rent' ? 'selected' : ''}>Rent only</option>
+                <option value="both" ${c.listingType === 'both' ? 'selected' : ''}>Buy or rent</option>
+              </select>
+            </div>
+            <div class="field"><label>Status</label>
+              <select name="status">
+                <option value="available" ${c.status === 'available' ? 'selected' : ''}>Available</option>
+                <option value="booked" ${c.status === 'booked' ? 'selected' : ''}>Booked</option>
+                <option value="maintenance" ${c.status === 'maintenance' ? 'selected' : ''}>In service</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Sale price ($)</label><input name="price" type="number" required value="${c.price}"></div>
+            <div class="field"><label>Rent price ($/day)</label><input name="rentPrice" type="number" required value="${c.rentPrice}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Mileage</label><input name="mileage" type="number" required value="${c.mileage}"></div>
+            <div class="field"><label>Seats</label><input name="seats" type="number" required value="${c.seats}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Transmission</label>
+              <select name="transmission"><option ${c.transmission === 'Automatic' ? 'selected' : ''}>Automatic</option><option ${c.transmission === 'Manual' ? 'selected' : ''}>Manual</option></select>
+            </div>
+            <div class="field"><label>Fuel</label>
+              <select name="fuel">
+                ${['Petrol', 'Diesel', 'Electric', 'Hybrid'].map(f => `<option ${c.fuel === f ? 'selected' : ''}>${f}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Description</label><textarea name="desc" placeholder="A few lines about this car...">${c.desc}</textarea></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:none;">${isNew ? 'Add car' : 'Save changes'}</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+        }
+        function saveCar(ev, id) {
+            ev.preventDefault();
+            const f = new FormData(ev.target);
+            const data = {
+                name: f.get('name'), brand: f.get('brand'), bodyType: f.get('bodyType'), year: +f.get('year'),
+                listingType: f.get('listingType'), status: f.get('status'), price: +f.get('price'), rentPrice: +f.get('rentPrice'),
+                mileage: +f.get('mileage'), seats: +f.get('seats'), transmission: f.get('transmission'), fuel: f.get('fuel'),
+                desc: f.get('desc') || 'No description provided yet.'
+            };
+            if (id === null) {
+                const colors = ['#e8b84b', '#5fa88a', '#7fb8e8', '#e2665a', '#c99bd8', '#9ca3ac', '#b98b4e'];
+                cars.push({ ...data, id: nextId++, rating: 4.5, color: colors[Math.floor(Math.random() * colors.length)] });
+                toast(`${data.name} added to inventory.`);
+            } else {
+                const c = findCar(id); Object.assign(c, data);
+                toast(`${data.name} updated.`);
+            }
+            closeModal();
+            renderMain();
+        }
+
+        /* ============ MASTER RENDER ============ */
+        function renderMain() {
+            const main = document.getElementById('main');
+            if (state.role === 'admin') { main.innerHTML = renderAdmin(); }
+            else if (state.userSubview === 'garage') { main.innerHTML = renderGarage(); }
+            else { main.innerHTML = renderHome(); }
+            renderModal();
+        }
+        function render() {
+            renderNav();
+            document.getElementById('garageCount').textContent = wishlist.size;
+            renderMain();
+        }
+
+        /* ============ CLOCK ============ */
+        function tickClock() {
+            const el = document.getElementById('clock');
+            if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        tickClock(); setInterval(tickClock, 1000 * 30);
+
+        /* ============ INIT ============ */
+        setRole('user');
+    </script>
+</body>
+
+</html>

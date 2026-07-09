@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NEMSU Cantilan — Student Records</title>
+<style>
+  :root{
+    --navy: #0f1a30;
+    --navy-2: #16233f;
+    --navy-3: #1e2c4d;
+    --paper: #eee7d6;
+    --card: #fffdf8;
+    --ink: #201c14;
+    --ink-dim: #746b57;
+    --rule: #ddd3ba;
+    --teal: #2f7d6b;
+    --teal-dim: #d7ece6;
+    --amber: #b9791f;
+    --amber-2: #e7bb63;
+    --amber-dim: #f5e6c9;
+    --red: #a83f38;
+    --red-dim: #f6e2e0;
+    --shadow-sm: 0 1px 2px rgba(24,18,6,0.06);
+    --shadow-md: 0 10px 28px -10px rgba(24,18,6,0.18), 0 2px 6px rgba(24,18,6,0.06);
+    --shadow-lg: 0 22px 46px -16px rgba(15,26,48,0.35);
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; min-height:100%; color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  body{
+    background:
+      radial-gradient(1100px 500px at 8% -10%, rgba(201,138,44,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(47,125,107,0.08), transparent 55%),
+      repeating-linear-gradient(180deg, rgba(116,107,87,0.05) 0px, rgba(116,107,87,0.05) 1px, transparent 1px, transparent 34px),
+      var(--paper);
+  }
+  .sans{ font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+
+  /* AUTH SYSTEM GRAPHICS & CONTAINERS */
+  .auth-container { display: flex; min-height: 100vh; justify-content: center; align-items: center; padding: 20px; }
+  .auth-card { background: var(--card); border: 1px solid var(--rule); border-top: 4px solid var(--amber); border-radius: 12px; width: 400px; max-width: 100%; padding: 34px; box-shadow: var(--shadow-lg); text-align: center; }
+  .auth-card h2 { font-size: 24px; color: var(--navy); margin: 0 0 8px 0; }
+  .auth-card p { font-family: -apple-system, sans-serif; font-size: 13px; color: var(--ink-dim); margin: 0 0 24px 0; line-height: 1.5; }
+  .auth-card .field { text-align: left; margin-bottom: 16px; }
+  .auth-card .links { margin-top: 20px; font-family: -apple-system, sans-serif; font-size: 13px; }
+  .auth-card .links a { color: var(--teal); text-decoration: none; font-weight: 600; cursor: pointer; }
+  .auth-card .links a:hover { text-decoration: underline; }
+  .auth-error { color: var(--red); background: var(--red-dim); padding: 10px; border-radius: 6px; font-family: -apple-system, sans-serif; font-size: 12px; margin-bottom: 16px; display: none; }
+
+  /* App Workspace hidden initially */
+  .app{ display:none; min-height:100vh; }
+
+  /* Sidebar */
+  .sidebar{
+    width: 240px; flex-shrink:0;
+    background: linear-gradient(180deg, var(--navy-3) 0%, var(--navy) 55%, #0b1424 100%);
+    color: #cfd6e6;
+    display:flex; flex-direction:column;
+    padding: 28px 0;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    z-index: 2;
+  }
+  .brand{ padding: 0 22px 24px 22px; border-bottom: 1px solid rgba(231,187,99,0.16); margin-bottom: 14px; text-align:center; }
+  .crest-wrap{ display:flex; justify-content:center; margin-bottom:12px; }
+  .crest{ width:62px; height:62px; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.45)); }
+  .brand .mark{ font-size: 18px; font-weight:700; color:#f6ecd8; letter-spacing:0.01em; line-height:1.25; }
+  .brand .sub{ font-family: -apple-system,sans-serif; font-size: 9.5px; letter-spacing:0.24em; text-transform:uppercase; color:#8b96b3; margin-top:6px; }
+
+  .nav-item{
+    font-family: -apple-system, sans-serif;
+    display:flex; align-items:center; gap:10px;
+    padding: 12.5px 22px; cursor:pointer; font-size: 13.5px; letter-spacing:0.02em; color: #a9b2c8;
+    border-left: 3px solid transparent; transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .nav-item .num{ font-size:11px; color:#5c6987; width:16px; }
+  .nav-item:hover{ background: rgba(255,255,255,0.04); color:#eef1f8; }
+  .nav-item.active{ background: linear-gradient(90deg, rgba(231,187,99,0.13), rgba(231,187,99,0.02)); color:#f6ecd8; border-left-color: var(--amber-2); }
+  .nav-item.active .num{ color: var(--amber-2); }
+  .sidebar-foot{ margin-top:auto; padding: 16px 22px 0 22px; font-family:-apple-system,sans-serif; font-size:10.5px; line-height:1.5; color:#5c6987; border-top:1px solid rgba(231,187,99,0.12); }
+
+  /* Main */
+  .main{ flex:1; padding: 0 40px 40px 40px; max-width: 1180px; }
+  .letterhead{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 2px; margin-bottom: 22px;
+    border-bottom: 1px solid rgba(184,121,31,0.35);
+  }
+  .letterhead .lh-left{ font-family:-apple-system,sans-serif; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color: var(--ink-dim); }
+  .letterhead .lh-left b{ color: var(--navy); }
+  .letterhead .lh-right{ font-family:-apple-system,sans-serif; font-size:11px; color: var(--ink-dim); }
+  .page-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 26px; flex-wrap:wrap; gap:12px; }
+  .page-head h1{ font-size: 28px; margin:0; font-weight:700; color: var(--navy); letter-spacing: -0.01em; }
+  .page-head .desc{ font-family:-apple-system,sans-serif; font-size:12.5px; color:var(--ink-dim); margin-top:6px; }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  /* Stat cards */
+  .stat-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom: 30px; }
+  .stat-card{
+    background: linear-gradient(180deg, var(--card), #fbf6ea);
+    border:1px solid var(--rule); border-radius:10px; padding:17px 19px;
+    box-shadow: var(--shadow-sm);
+    position:relative; overflow:hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .stat-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; background: var(--bar, var(--navy)); }
+  .stat-card:hover{ transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .stat-card:nth-child(1){ --bar: var(--navy); }
+  .stat-card:nth-child(2){ --bar: var(--teal); }
+  .stat-card:nth-child(3){ --bar: var(--amber); }
+  .stat-card:nth-child(4){ --bar: #7458a8; }
+  .stat-card .label{ font-family:-apple-system,sans-serif; font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-dim); }
+  .stat-card .value{ font-size:29px; font-weight:700; margin-top:7px; color:var(--navy); }
+  .stat-card .value.teal{ color:var(--teal); }
+  .stat-card .value.amber{ color:var(--amber); }
+
+  .section-title{ font-size:16px; font-weight:700; margin: 28px 0 12px 0; color: var(--navy); }
+
+  /* Table */
+  .table-card{ background:var(--card); border:1px solid var(--rule); border-radius:10px; overflow:hidden; box-shadow: var(--shadow-sm); }
+  table{ width:100%; border-collapse: collapse; font-family:-apple-system,sans-serif; font-size:13px; }
+  thead th{ text-align:left; padding: 12px 16px; background: linear-gradient(180deg, #f7f1e0, #f2ead4); color: var(--ink-dim);
+    font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; border-bottom:1px solid var(--rule); }
+  tbody td{ padding: 12px 16px; border-bottom:1px solid var(--rule); vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background: #fbf7ea; }
+  .name-cell{ font-family: Georgia, serif; font-weight:700; color:var(--navy); cursor:pointer; }
+  .name-cell:hover{ color: var(--amber); text-decoration: underline; }
+  .tag{ display:inline-block; padding:3px 10px; border-radius: 20px; font-size:11px; font-family:-apple-system,sans-serif; }
+  .tag.year{ background:#eef1f8; color:#3a4460; }
+  .tag.subj{ background:var(--amber-dim); color:#7a5619; }
+
+  .row-actions{ display:flex; gap:8px; }
+  .icon-btn{ font-family:-apple-system,sans-serif; font-size:12px; cursor:pointer; border:1px solid var(--rule);
+    background:#fff; padding:5px 11px; border-radius:5px; color:var(--ink); transition: all 0.15s; box-shadow: var(--shadow-sm); }
+  .icon-btn:hover{ border-color:var(--navy); transform: translateY(-1px); }
+  .icon-btn.danger:hover{ border-color:var(--red); color:var(--red); background:var(--red-dim); }
+
+  /* Buttons + inputs */
+  .btn{ font-family:-apple-system,sans-serif; font-size:13px; cursor:pointer; border:none;
+    background: linear-gradient(180deg, var(--navy-3), var(--navy)); color:#f6ecd8; padding:10px 19px; border-radius:6px;
+    letter-spacing:0.01em; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 6px 16px -6px rgba(15,26,48,0.5); }
+  .btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 20px -6px rgba(15,26,48,0.55); }
+  .btn.ghost{ background:transparent; color:var(--navy); border:1px solid var(--rule); box-shadow:none; }
+  .btn.ghost:hover{ background:#fff; }
+  .btn.teal{ background: linear-gradient(180deg, #368873, var(--teal)); box-shadow: 0 6px 16px -6px rgba(47,125,107,0.5); }
+  .btn.small{ padding:8px 14px; font-size:12px; }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+  input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], select{
+    font-family:-apple-system,sans-serif; font-size:13px; padding:9px 12px; border:1px solid var(--rule);
+    border-radius:6px; background:#fffdf9; color:var(--ink); width:100%; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:hover, select:hover{ border-color: #c9bd9c; }
+  input:focus, select:focus{ border-color: var(--teal); box-shadow: 0 0 0 3px rgba(47,125,107,0.14); }
+  input:focus, select:focus, .icon-btn:focus-visible, .btn:focus-visible, .nav-item:focus-visible{
+    outline: none;
+  }
+  .search-wrap{ position:relative; width: 260px; }
+  .search-wrap input{ padding-left: 32px; }
+  .search-wrap .ic{ position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--ink-dim); }
+
+  /* Modal */
+  .overlay{ display:none; position:fixed; inset:0; background: rgba(15,26,48,0.55); backdrop-filter: blur(2px); z-index:50; align-items:center; justify-content:center; padding:20px; }
+  .overlay.show{ display:flex; }
+  .modal{ background:#fffdf8; width: 440px; max-width: 94vw; border-radius:10px; padding: 26px; font-family:-apple-system,sans-serif; max-height:88vh; overflow-y:auto; box-shadow: var(--shadow-lg); border-top: 3px solid var(--amber-2); }
+  .modal h2{ font-family:Georgia,serif; font-size:19px; margin:0 0 4px 0; color:var(--navy); }
+  .modal .modal-sub{ font-size:12px; color:var(--ink-dim); margin-bottom:18px; }
+  .field{ margin-bottom:13px; }
+  .field label{ display:block; font-size:11.5px; color:var(--ink-dim); margin-bottom:5px; letter-spacing:0.03em; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+
+  /* Profile modal specifics */
+  .profile-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .profile-head .pname{ font-family:Georgia,serif; font-size:20px; font-weight:700; color:var(--navy); }
+  .profile-head .pmeta{ font-size:12px; color:var(--ink-dim); margin-top:3px; }
+  .profile-stat-row{ display:flex; gap:10px; margin: 14px 0 18px 0; }
+  .profile-stat{ flex:1; background:#faf8f2; border:1px solid var(--rule); border-radius:6px; padding:10px 12px; }
+  .profile-stat .label{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-dim); }
+  .profile-stat .value{ font-size:19px; font-weight:700; color:var(--navy); margin-top:4px; }
+  .profile-sub-title{ font-size:12.5px; font-weight:700; color:var(--navy); margin: 16px 0 8px 0; text-transform:uppercase; letter-spacing:0.06em; }
+  .mini-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+  .mini-row:last-child{ border-bottom:none; }
+  .bar-track{ width:80px; height:6px; background:var(--rule); border-radius:4px; overflow:hidden; display:inline-block; vertical-align:middle; margin-left:8px; }
+  .bar-fill{ height:100%; background:var(--teal); }
+
+  /* Attendance */
+  .att-toolbar{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .att-toolbar .subj-field{ width:220px; }
+  .att-toolbar .date-field{ width:170px; }
+  .att-list .att-row{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--rule); font-family:-apple-system,sans-serif; font-size:13px; }
+  .att-list .att-row:last-child{ border-bottom:none; }
+  .toggle-group{ display:flex; gap:6px; }
+  .toggle-btn{ font-family:-apple-system,sans-serif; font-size:11.5px; padding:6px 13px; border-radius:20px; border:1px solid var(--rule); background:#fff; cursor:pointer; color:var(--ink-dim); }
+  .toggle-btn.present.active{ background: var(--teal-dim); border-color:var(--teal); color:var(--teal); font-weight:700; }
+  .toggle-btn.absent.active{ background: var(--red-dim); border-color:var(--red); color:var(--red); font-weight:700; }
+  .toggle-btn.late.active{ background: var(--amber-dim); border-color:var(--amber); color:#7a5619; font-weight:700; }
+
+  /* Grades */
+  .grade-card{ background:linear-gradient(180deg, var(--card), #fbf6ea); border:1px solid var(--rule); border-radius:10px; padding:17px 19px; margin-bottom:13px; box-shadow: var(--shadow-sm); }
+  .grade-card .g-head{ display:flex; justify-content:space-between; align-items:center; font-family:-apple-system,sans-serif; }
+  .grade-card .g-head .gname{ font-family:Georgia,serif; font-weight:700; font-size:15px; color:var(--navy); }
+  .grade-card .g-head .gavg{ font-size:13px; color:var(--teal); font-weight:700; }
+  .grade-pills{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .grade-pill{ font-family:-apple-system,sans-serif; font-size:12px; background:#faf8f2; border:1px solid var(--rule); border-radius:20px; padding:5px 12px; display:flex; align-items:center; gap:6px; }
+  .grade-pill .score{ font-weight:700; color:var(--navy); }
+  .add-grade-row{ display:flex; gap:8px; margin-top:12px; }
+  .add-grade-row select{ flex:1.4; }
+  .add-grade-row input{ flex:1; }
+  .add-grade-row .btn{ padding:8px 14px; font-size:12px; }
+
+  /* Subjects */
+  .subject-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:14px; }
+  .subject-card{ background:linear-gradient(180deg, var(--card), #fbf6ea); border:1px solid var(--rule); border-radius:10px; padding:15px 17px; box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; border-top: 3px solid var(--amber-2); }
+  .subject-card:hover{ transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .subject-card .sname{ font-family:Georgia,serif; font-weight:700; font-size:15px; color:var(--navy); }
+  .subject-card .scourse{ font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
+  .subject-card .sfoot{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+  .subject-card .scount{ font-family:-apple-system,sans-serif; font-size:11px; color:var(--ink-dim); }
+
+  .empty{ padding: 34px; text-align:center; color: var(--ink-dim); font-family:-apple-system,sans-serif; font-size:13px; }
+
+  /* Enrollment */
+  .enroll-layout{ display:grid; grid-template-columns: 1.7fr 1fr; gap:20px; align-items:start; }
+  .enroll-form-card{ background:linear-gradient(180deg, var(--card), #fbf6ea); border:1px solid var(--rule); border-radius:10px; padding:24px 26px; box-shadow: var(--shadow-sm); font-family:-apple-system,sans-serif; }
+  .form-section-title{ font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color: var(--amber); margin: 22px 0 12px 0; padding-bottom:8px; border-bottom:1px solid var(--rule); }
+  .form-section-title:first-of-type{ margin-top:0; }
+  .form-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px 16px; }
+  .subject-checks{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:10px; }
+  .subj-check{ display:flex; align-items:center; gap:9px; padding:10px 12px; border:1px solid var(--rule); border-radius:7px; background:#fffdf9; cursor:pointer; font-size:12.5px; transition: border-color 0.15s, background 0.15s; }
+  .subj-check:hover{ border-color:#c9bd9c; }
+  .subj-check.checked{ border-color: var(--teal); background: var(--teal-dim); }
+  .subj-check input{ width:auto; accent-color: var(--teal); }
+  .subj-check .sc-name{ font-weight:600; color:var(--navy); }
+  .subj-check .sc-course{ display:block; font-size:10.5px; color:var(--ink-dim); margin-top:1px; }
+
+  .enroll-side{ display:flex; flex-direction:column; gap:14px; }
+  .side-card{ background:linear-gradient(180deg, var(--card), #fbf6ea); border:1px solid var(--rule); border-radius:10px; padding:16px 18px; box-shadow: var(--shadow-sm); font-family:-apple-system,sans-serif; }
+  .side-title{ font-size:11.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color: var(--navy); margin-bottom:10px; }
+  .side-card.note-card{ background: linear-gradient(180deg, #fbf6ea, #f6efdb); }
+
+  @media (max-width: 800px){
+    .enroll-layout{ grid-template-columns: 1fr; }
+    .form-grid{ grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 900px){
+    .sidebar{ width:76px; }
+    .brand .sub, .brand .mark, .nav-item span.label, .sidebar-foot{ display:none; }
+    .crest{ width:40px; height:40px; }
+    .nav-item{ justify-content:center; padding:14px; }
+    .stat-grid{ grid-template-columns: repeat(2,1fr); }
+    .main{ padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-container" id="portalSection">
+    <div class="auth-card">
+        <svg class="crest" style="margin-bottom:14px;" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="crestGradPortal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e7bb63"/>
+              <stop offset="100%" stop-color="#c98a2c"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 2 L59 13 V30 C59 45 48 56 32 62 C16 56 5 45 5 30 V13 Z" fill="#182135" stroke="url(#crestGradPortal)" stroke-width="1.6"/>
+          <path d="M20 36 L20 22 L32 16 L44 22 L44 36 L32 42 Z" fill="none" stroke="url(#crestGradPortal)" stroke-width="1.4"/>
+          <text x="32" y="32" text-anchor="middle" font-family="Georgia, serif" font-size="12.5" font-weight="700" fill="#f3ead9">NC</text>
+        </svg>
+        <h2>NEMSU Cantilan</h2>
+        <p>Student Information & Records Portal. Secure access checkpoint.</p>
+        <button class="btn sans" style="width:100%; margin-bottom:12px;" onclick="switchAuthView('login')">Log In</button>
+        <button class="btn ghost sans" style="width:100%;" onclick="switchAuthView('register')">Create an Account</button>
+    </div>
+</div>
+
+<div class="auth-container" id="loginSection" style="display:none;">
+    <div class="auth-card">
+        <h2>Account Login</h2>
+        <p>Enter your authorization tokens below.</p>
+        <div class="auth-error" id="loginError">Invalid account credentials.</div>
+        <form id="authLoginForm">
+            <div class="field"><label>Email address</label><input type="email" id="loginEmail" required placeholder="admin@nemsu.edu.ph"></div>
+            <div class="field"><label>Password</label><input type="password" id="loginPass" required placeholder="••••••••"></div>
+            <button class="btn sans" style="width:100%;" type="submit">Access Dashboard</button>
+        </form>
+        <div class="links">
+            <a onclick="switchAuthView('register')">Need an account? Register</a> · 
+            <a onclick="switchAuthView('portal')">Back</a>
+        </div>
+    </div>
+</div>
+
+<div class="auth-container" id="registerSection" style="display:none;">
+    <div class="auth-card">
+        <h2>Register Portal Account</h2>
+        <p>Set up workspace credentials to begin record-keeping.</p>
+        <div class="auth-error" id="registerError">This email is already active.</div>
+        <form id="authRegisterForm">
+            <div class="field"><label>Full Name</label><input type="text" id="regName" required placeholder="Professor Dean"></div>
+            <div class="field"><label>Email address</label><input type="email" id="regEmail" required placeholder="admin@nemsu.edu.ph"></div>
+            <div class="field"><label>Password</label><input type="password" id="regPass" required placeholder="••••••••"></div>
+            <button class="btn teal sans" style="width:100%;" type="submit">Complete Setup</button>
+        </form>
+        <div class="links">
+            <a onclick="switchAuthView('login')">Already registered? Log In</a> · 
+            <a onclick="switchAuthView('portal')">Back</a>
+        </div>
+    </div>
+</div>
+
+<div class="app" id="mainDashboardApp">
+
+  <div class="sidebar sans">
+    <div class="brand">
+      <div class="crest-wrap">
+        <svg class="crest" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="crestGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e7bb63"/>
+              <stop offset="100%" stop-color="#c98a2c"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 2 L59 13 V30 C59 45 48 56 32 62 C16 56 5 45 5 30 V13 Z" fill="#182135" stroke="url(#crestGrad)" stroke-width="1.6"/>
+          <path d="M32 6 L55 15.5 V30 C55 43 45.5 52.5 32 58 C18.5 52.5 9 43 9 30 V15.5 Z" fill="none" stroke="#3a4460" stroke-width="0.8"/>
+          <path d="M20 36 L20 22 L32 16 L44 22 L44 36 L32 42 Z" fill="none" stroke="url(#crestGrad)" stroke-width="1.4"/>
+          <line x1="20" y1="22" x2="44" y2="22" stroke="url(#crestGrad)" stroke-width="1"/>
+          <text x="32" y="32" text-anchor="middle" font-family="Georgia, serif" font-size="12.5" font-weight="700" fill="#f3ead9">NC</text>
+          <text x="32" y="41" text-anchor="middle" font-family="Georgia, serif" font-size="4.3" letter-spacing="0.5" fill="#e7bb63">CANTILAN</text>
+        </svg>
+      </div>
+      <div class="mark">NEMSU Cantilan</div>
+      <div class="sub">Student Records</div>
+    </div>
+    <div class="nav-item active" data-panel="dashboard"><span class="num">01</span><span class="label">Dashboard</span></div>
+    <div class="nav-item" data-panel="enrollment"><span class="num">02</span><span class="label">Enrollment</span></div>
+    <div class="nav-item" data-panel="students"><span class="num">03</span><span class="label">Students</span></div>
+    <div class="nav-item" data-panel="subjects"><span class="num">04</span><span class="label">Subjects</span></div>
+    <div class="nav-item" data-panel="attendance"><span class="num">05</span><span class="label">Attendance</span></div>
+    <div class="nav-item" data-panel="grades"><span class="num">06</span><span class="label">Grades</span></div>
+    
+    <div class="nav-item" id="appLogoutBtn" style="margin-top:20px; border-left-color:var(--red);"><span class="num">→</span><span class="label" style="color:var(--red);">Log Out</span></div>
+    
+    <div class="sidebar-foot">Data resets on page reload — no server, all in-browser.</div>
+  </div>
+
+  <div class="main">
+    <div class="letterhead sans">
+      <div class="lh-left"><b>NEMSU Cantilan</b> · Student Information System · <span id="portalUserSession" style="color:var(--teal); font-weight:bold;">Admin</span></div>
+      <div class="lh-right" id="lhDate"></div>
+    </div>
+
+    <div class="panel active" id="panel-dashboard">
+      <div class="page-head">
+        <div>
+          <h1>Dashboard</h1>
+          <div class="desc">An overview of the roll, today's attendance, and class performance.</div>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Total Students</div><div class="value" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="label">Present Today</div><div class="value teal" id="statPresent">0</div></div>
+        <div class="stat-card"><div class="label">Class Average</div><div class="value amber" id="statAvg">—</div></div>
+        <div class="stat-card"><div class="label">Subjects Offered</div><div class="value" id="statSubjects">0</div></div>
+      </div>
+      <div class="section-title">Recently Added</div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Course</th><th>Year</th></tr></thead>
+          <tbody id="recentBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-enrollment">
+      <div class="page-head">
+        <div>
+          <h1>Enrollment</h1>
+          <div class="desc">Register a new student and enroll them into this term's subjects in one step.</div>
+        </div>
+      </div>
+
+      <div class="enroll-layout">
+        <div class="enroll-form-card">
+          <div class="form-section-title">Personal Information</div>
+          <div class="form-grid">
+            <div class="field"><label>Full name</label><input type="text" id="enName" placeholder="e.g. Maria Santos"></div>
+            <div class="field"><label>Roll number</label><input type="text" id="enRoll" placeholder="e.g. 2026-0201"></div>
+            <div class="field"><label>Email address</label><input type="email" id="enEmail" placeholder="name@nemsu.edu.ph"></div>
+            <div class="field"><label>Contact number</label><input type="text" id="enPhone" placeholder="e.g. 0912 345 6789"></div>
+          </div>
+
+          <div class="form-section-title">Academic Details</div>
+          <div class="form-grid">
+            <div class="field"><label>Course / program</label>
+              <select id="enCourse">
+                <option>BS Computer Science</option>
+                <option>BS Accountancy</option>
+                <option>BS Nursing</option>
+                <option>BS Education</option>
+                <option>BS Criminology</option>
+              </select>
+            </div>
+            <div class="field"><label>Year level</label>
+              <select id="enYear">
+                <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+              </select>
+            </div>
+            <div class="field"><label>Previous school</label><input type="text" id="enPrevSchool" placeholder="e.g. Cantilan National High School"></div>
+            <div class="field"><label>Enrollment date</label><input type="date" id="enDate"></div>
+          </div>
+
+          <div class="form-section-title">Guardian Information</div>
+          <div class="form-grid">
+            <div class="field"><label>Guardian name</label><input type="text" id="enGuardian" placeholder="e.g. Rosa Santos"></div>
+            <div class="field"><label>Guardian contact</label><input type="text" id="enGuardianPhone" placeholder="e.g. 0917 222 3333"></div>
+          </div>
+
+          <div class="form-section-title">Subjects This Term</div>
+          <div class="desc" style="margin-bottom:10px;">Select the subjects this student will take. You can adjust their load later from the Students tab.</div>
+          <div class="subject-checks" id="enSubjectChecks"></div>
+
+          <div class="modal-actions" style="margin-top:22px;">
+            <button class="btn ghost sans" id="enResetBtn" type="button">Clear Form</button>
+            <button class="btn sans" id="enSubmitBtn" type="button">Enroll Student</button>
+          </div>
+        </div>
+
+        <div class="enroll-side">
+          <div class="side-card">
+            <div class="side-title">This Term at a Glance</div>
+            <div class="mini-row"><span>Currently enrolled</span><span><b id="enSideTotal">0</b></span></div>
+            <div class="mini-row"><span>Subjects offered</span><span><b id="enSideSubjects">0</b></span></div>
+            <div class="mini-row"><span>Programs offered</span><span><b>5</b></span></div>
+          </div>
+          <div class="side-card" id="enSuccessCard" style="display:none;">
+            <div class="side-title" style="color:var(--teal);">✓ Enrollment Recorded</div>
+            <div class="desc" id="enSuccessMsg" style="margin:0;"></div>
+          </div>
+          <div class="side-card note-card">
+            <div class="side-title">Note</div>
+            <div class="desc" style="margin:0;">Roll number and email are optional but recommended — they're used to keep records searchable across the Students and Grades tabs.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-students">
+      <div class="page-head">
+        <div>
+          <h1>Legal Students</h1>
+          <div class="desc">Add, edit, search, and remove student records. Click a name to open the full profile.</div>
+        </div>
+        <button class="btn sans" id="openAddStudent">+ Add Student</button>
+      </div>
+      <div class="toolbar sans">
+        <div class="search-wrap">
+          <span class="ic">⌕</span>
+          <input type="text" id="studentSearch" placeholder="Search by name, roll no., or course">
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Course</th><th>Year</th><th>Email</th><th></th></tr></thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-subjects">
+      <div class="page-head">
+        <div>
+          <h1>Subjects</h1>
+          <div class="desc">Manage the subject list used across attendance and grades.</div>
+        </div>
+        <button class="btn sans" id="openAddSubject">+ Add Subject</button>
+      </div>
+      <div class="subject-grid" id="subjectGrid"></div>
+    </div>
+
+    <div class="panel" id="panel-attendance">
+      <div class="page-head">
+        <div>
+          <h1>Attendance</h1>
+          <div class="desc">Pick a subject and date, then mark each student present, absent, or late.</div>
+        </div>
+      </div>
+      <div class="att-toolbar sans">
+        <div class="subj-field"><select id="attSubject"></select></div>
+        <div class="date-field"><input type="date" id="attDate"></div>
+        <div class="sans" style="font-size:12.5px; color:var(--ink-dim);">
+          Marked: <span id="attMarkedCount">0</span> / <span id="attTotalCount">0</span>
+        </div>
+      </div>
+      <div class="table-card att-list" id="attList"></div>
+    </div>
+
+    <div class="panel" id="panel-grades">
+      <div class="page-head">
+        <div>
+          <h1>Grades</h1>
+          <div class="desc">Record a score per subject for each student and track their running average.</div>
+        </div>
+      </div>
+      <div id="gradesList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="overlay" id="studentOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add Student</h2>
+    <div class="modal-sub">Fill in the details below.</div>
+    <div class="field"><label>Full name</label><input type="text" id="fName" placeholder="e.g. Maria Santos"></div>
+    <div class="field"><label>Roll number</label><input type="text" id="fRoll" placeholder="e.g. 2026-0142"></div>
+    <div class="field"><label>Course</label><input type="text" id="fCourse" placeholder="e.g. BS Computer Science"></div>
+    <div class="field"><label>Year level</label>
+      <select id="fYear">
+        <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+      </select>
+    </div>
+    <div class="field"><label>Email</label><input type="email" id="fEmail" placeholder="name@school.edu"></div>
+    <div class="modal-actions">
+      <button class="btn ghost sans" id="cancelStudent">Cancel</button>
+      <button class="btn sans" id="saveStudent">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="subjectOverlay">
+  <div class="modal">
+    <h2>Add Subject</h2>
+    <div class="modal-sub">This subject becomes available in Attendance and Grades.</div>
+    <div class="field"><label>Subject name</label><input type="text" id="subjName" placeholder="e.g. Data Structures"></div>
+    <div class="field"><label>Course / department</label><input type="text" id="subjCourse" placeholder="e.g. BS Computer Science"></div>
+    <div class="modal-actions">
+      <button class="btn ghost sans" id="cancelSubject">Cancel</button>
+      <button class="btn sans" id="saveSubject">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="profileOverlay">
+  <div class="modal" style="width:480px;">
+    <div class="profile-head">
+      <div>
+        <div class="pname" id="pName"></div>
+        <div class="pmeta" id="pMeta"></div>
+      </div>
+      <button class="icon-btn" id="closeProfile">Close</button>
+    </div>
+    <div class="profile-stat-row">
+      <div class="profile-stat"><div class="label">Overall Avg.</div><div class="value" id="pAvg">—</div></div>
+      <div class="profile-stat"><div class="label">Subjects</div><div class="value" id="pSubjCount">0</div></div>
+      <div class="profile-stat"><div class="label">Attendance</div><div class="value" id="pAttRate">—</div></div>
+    </div>
+    <div class="profile-sub-title">Enrolled Subjects</div>
+    <div id="pEnrolled" style="margin-bottom:4px;"></div>
+    <div class="profile-sub-title">Grades</div>
+    <div id="pGrades"></div>
+    <div class="profile-sub-title">Attendance by Subject</div>
+    <div id="pAttendance"></div>
+  </div>
+</div>
+
+<script>
+// Global Authorization Router Logic
+function switchAuthView(view) {
+    document.getElementById('portalSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('registerSection').style.display = 'none';
+    document.getElementById('mainDashboardApp').style.display = 'none';
+    
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('registerError').style.display = 'none';
+
+    if (view === 'portal') document.getElementById('portalSection').style.display = 'flex';
+    if (view === 'login') document.getElementById('loginSection').style.display = 'flex';
+    if (view === 'register') document.getElementById('registerSection').style.display = 'flex';
+    if (view === 'app') document.getElementById('mainDashboardApp').style.display = 'flex';
+}
+
+(function(){
+  // Check if system is logged in
+  const loggedUser = localStorage.getItem("nemsuUserToken");
+  if(loggedUser) {
+      document.getElementById('mainDashboardApp').style.display = 'flex';
+      document.getElementById('portalSection').style.display = 'none';
+      document.getElementById('portalUserSession').textContent = loggedUser;
+  } else {
+      document.getElementById('portalSection').style.display = 'flex';
+      document.getElementById('mainDashboardApp').style.display = 'none';
+  }
+
+  // Handle Register Action
+  document.getElementById('authRegisterForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const pass = document.getElementById('regPass').value;
+      
+      let accounts = JSON.parse(localStorage.getItem('nemsuAccounts') || '[]');
+      if(accounts.find(a => a.email === email)){
+          document.getElementById('registerError').style.display = 'block';
+          return;
+      }
+      accounts.push({name, email, pass});
+      localStorage.setItem('nemsuAccounts', JSON.stringify(accounts));
+      alert('Account registered successfully! Proceeding to Login.');
+      switchAuthView('login');
+  });
+
+  // Handle Login Action
+  document.getElementById('authLoginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPass').value;
+      
+      let accounts = JSON.parse(localStorage.getItem('nemsuAccounts') || '[]');
+      
+      // Default backup account fallback
+      if(accounts.length === 0 && email === "admin@nemsu.edu.ph" && pass === "admin123") {
+          accounts.push({name: "Administrator", email: "admin@nemsu.edu.ph", pass: "admin123"});
+          localStorage.setItem('nemsuAccounts', JSON.stringify(accounts));
+      }
+
+      const verified = accounts.find(a => a.email === email && a.pass === pass);
+      if(verified) {
+          localStorage.setItem("nemsuUserToken", verified.name);
+          document.getElementById('portalUserSession').textContent = verified.name;
+          switchAuthView('app');
+      } else {
+          document.getElementById('loginError').style.display = 'block';
+      }
+  });
+
+  // Handle Logout Action
+  document.getElementById('appLogoutBtn').addEventListener('click', function(){
+      localStorage.removeItem("nemsuUserToken");
+      switchAuthView('portal');
+  });
+
+  // ---------- Existing App Code (in-memory only) ----------
+  let students = [
+    { id: 1, name: "Maria Santos", roll: "2026-0142", course: "BS Computer Science", year: "3rd Year", email: "maria.santos@school.edu", enrolledSubjects: [1,2] },
+    { id: 2, name: "Julian Reyes", roll: "2026-0098", course: "BS Accountancy", year: "2nd Year", email: "julian.reyes@school.edu", enrolledSubjects: [6] },
+    { id: 3, name: "Amara Cruz", roll: "2026-0177", course: "BS Nursing", year: "1st Year", email: "amara.cruz@school.edu", enrolledSubjects: [10] },
+    { id: 4, name: "Diego Torres", roll: "2026-0055", course: "BS Computer Science", year: "4th Year", email: "diego.torres@school.edu", enrolledSubjects: [3] }
+  ];
+  let nextId = 5;
+
+  let subjects = [
+    { id: 1, name: "Data Structures & Algorithms", course: "BS Computer Science" },
+    { id: 2, name: "Calculus II", course: "BS Computer Science" },
+    { id: 3, name: "Operating Systems", course: "BS Computer Science" },
+    { id: 4, name: "Database Management Systems", course: "BS Computer Science" },
+    { id: 5, name: "Computer Networks", course: "BS Computer Science" },
+    { id: 6, name: "Financial Accounting", course: "BS Accountancy" },
+    { id: 7, name: "Cost Accounting", course: "BS Accountancy" },
+    { id: 8, name: "Business Taxation", course: "BS Accountancy" },
+    { id: 9, name: "Auditing Theory", course: "BS Accountancy" },
+    { id: 10, name: "Anatomy & Physiology", course: "BS Nursing" },
+    { id: 11, name: "Fundamentals of Nursing", course: "BS Nursing" },
+    { id: 12, name: "Microbiology & Parasitology", course: "BS Nursing" },
+    { id: 13, name: "Community Health Nursing", course: "BS Nursing" },
+    { id: 14, name: "Child and Adolescent Development", course: "BS Education" },
+    { id: 15, name: "Principles of Teaching", course: "BS Education" },
+    { id: 16, name: "Curriculum Development", course: "BS Education" },
+    { id: 17, name: "Criminal Law", course: "BS Criminology" },
+    { id: 18, name: "Criminalistics", course: "BS Criminology" },
+    { id: 19, name: "Forensic Science", course: "BS Criminology" },
+    { id: 20, name: "Purposive Communication", course: "General Education" },
+    { id: 21, name: "Understanding the Self", course: "General Education" },
+    { id: 22, name: "Physical Education 2", course: "General Education" },
+    { id: 23, name: "National Service Training Program", course: "General Education" }
+  ];
+  let nextSubjId = 24;
+
+  let attendance = {};
+
+  let grades = {
+    1: [{ subjectId: 1, score: 91 }, { subjectId: 2, score: 84 }],
+    2: [{ subjectId: 6, score: 88 }],
+    3: [{ subjectId: 10, score: 79 }],
+    4: [{ subjectId: 3, score: 94 }]
+  };
+
+  let editingId = null;
+
+  // ---------- Letterhead date ----------
+  const todayStr = new Date().toISOString().split('T')[0];
+  const dateEl = document.getElementById('lhDate');
+  if(dateEl) dateEl.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  
+  if(document.getElementById('attDate')) document.getElementById('attDate').value = todayStr;
+  if(document.getElementById('enDate')) document.getElementById('enDate').value = todayStr;
+
+  // ---------- Nav Layout Switcher ----------
+  const navItems = document.querySelectorAll('.nav-item');
+  const panels = document.querySelectorAll('.panel');
+  
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      if(item.id === "appLogoutBtn") return; // Bypass logout item
+      navItems.forEach(n => n.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      
+      item.classList.add('active');
+      const panelId = "panel-" + item.getAttribute('data-panel');
+      const targetPanel = document.getElementById(panelId);
+      if(targetPanel) targetPanel.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

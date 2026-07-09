@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPRINT — Speed Typing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1116;
+    --panel:#161a22;
+    --line:#262c38;
+    --line-soft:#1c212b;
+    --yellow:#ffd23f;
+    --yellow-dim:#4a3f14;
+    --green:#3ddc84;
+    --red:#ff5f6d;
+    --text:#eef1f6;
+    --text-dim:#7c8496;
+    --text-faint:#4d5567;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(255,210,63,0.07), transparent 55%),
+      radial-gradient(700px 400px at 0% 100%, rgba(61,220,132,0.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Manrope', sans-serif;
+    min-height:100vh;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:36px 16px 60px;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .wrap{ max-width:860px; width:100%; }
+
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:12px;}
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .flag{
+    width:44px; height:44px; border-radius:8px; flex-shrink:0;
+    background:linear-gradient(155deg, var(--yellow), #c99e00);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-family:'JetBrains Mono',monospace; color:#1a1503; font-size:17px;
+  }
+  h1{ font-size:20px; font-weight:800; letter-spacing:0.4px; }
+  .sub{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+
+  .stat-strip{ display:flex; gap:10px; flex-wrap:wrap; }
+  .stat{
+    background:var(--panel); border:1px solid var(--line-soft); border-radius:10px;
+    padding:9px 16px; min-width:70px; text-align:center; transition:border-color .2s ease;
+  }
+  .stat.warn{ border-color:var(--red); }
+  .stat .v{ font-family:'JetBrains Mono',monospace; font-weight:800; font-size:20px; }
+  .stat .v.time{ color:var(--yellow); }
+  .stat.warn .v.time{ color:var(--red); animation:pulse 1s ease-in-out infinite; }
+  .stat .v.wpm{ color:var(--green); }
+  .stat .v.acc{ color:var(--text); }
+  .stat .v.best{ color:#c98bff; }
+  .stat .l{ font-size:9.5px; color:var(--text-faint); letter-spacing:0.6px; text-transform:uppercase; margin-top:2px; }
+  @keyframes pulse{ 50%{ opacity:0.4; } }
+
+  /* ===== Settings bar ===== */
+  .settings{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    margin-bottom:16px; padding:12px 14px; background:var(--panel); border:1px solid var(--line-soft); border-radius:12px;
+  }
+  .settings.locked{ opacity:0.45; pointer-events:none; }
+  .setting-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .setting-label{ font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; margin-right:2px; }
+  .pill{
+    padding:6px 13px; border-radius:999px; border:1px solid var(--line); background:var(--bg);
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; color:var(--text-dim); cursor:pointer;
+    transition:all .15s ease;
+  }
+  .pill:hover{ border-color:var(--yellow); color:var(--text); }
+  .pill.active{ background:var(--yellow-dim); border-color:var(--yellow); color:var(--yellow); }
+  .toggle{
+    display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:var(--text-dim); user-select:none;
+  }
+  .toggle .box{
+    width:16px; height:16px; border-radius:4px; border:1px solid var(--line); background:var(--bg);
+    display:flex; align-items:center; justify-content:center; transition:all .15s ease;
+  }
+  .toggle.on .box{ background:var(--yellow); border-color:var(--yellow); }
+  .toggle.on .box::after{ content:"✓"; font-size:11px; color:#1a1503; font-weight:800; }
+  .toggle.on{ color:var(--text); }
+
+  .progress-track{ height:5px; background:var(--line-soft); border-radius:99px; overflow:hidden; margin-bottom:20px; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--yellow), var(--green)); width:0%; transition:width 1s linear; }
+
+  .type-card{
+    background:var(--panel); border:1px solid var(--line-soft); border-radius:16px;
+    padding:30px 26px; position:relative; min-height:200px; cursor:text;
+    transition:border-color .2s ease;
+  }
+  .type-card.focused{ border-color:var(--yellow-dim); }
+  #wordStream{
+    font-family:'JetBrains Mono',monospace; font-size:22px; line-height:1.9;
+    letter-spacing:0.3px; color:var(--text-faint); user-select:none;
+    max-height:190px; overflow:hidden; position:relative; filter:none;
+    transition:filter .15s ease;
+  }
+  .type-card:not(.focused) #wordStream{ filter:blur(2.5px); opacity:0.65; }
+  #wordStream .w{ display:inline-block; margin:0 9px 6px 0; padding:1px 2px; border-radius:3px; }
+  #wordStream .w.done-correct{ color:var(--green); }
+  #wordStream .w.done-wrong{ color:var(--red); text-decoration:underline; text-decoration-color:var(--red); }
+  #wordStream .w.current{ color:var(--text); background:var(--yellow-dim); border-radius:4px; }
+  #wordStream .w .ch.typed-correct{ color:var(--green); }
+  #wordStream .w .ch.typed-wrong{ color:var(--red); background:rgba(255,95,109,0.18); border-radius:2px; }
+  #wordStream .w.current .ch.extra{ color:var(--red); text-decoration:underline; }
+  .caret{
+    border-left:2px solid var(--yellow); margin-left:-1px; animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .fade-bottom{
+    position:absolute; left:26px; right:26px; bottom:0; height:60px;
+    background:linear-gradient(transparent, var(--panel)); pointer-events:none;
+  }
+  .focus-hint{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(14,17,22,0.55); border-radius:16px; font-size:13px; color:var(--text-dim);
+    opacity:0; pointer-events:none; transition:opacity .15s ease; font-weight:600;
+  }
+  .type-card:not(.focused):not(.finished) .focus-hint{ opacity:1; }
+
+  #hiddenInput{
+    position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; border:none; outline:none;
+  }
+
+  .controls{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; flex-wrap:wrap; gap:10px; }
+  .hint{ font-size:12px; color:var(--text-faint); }
+  .hint kbd{ background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 6px; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  button{
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:13.5px;
+    border:none; border-radius:8px; padding:11px 20px; cursor:pointer; letter-spacing:0.2px;
+  }
+  .btn-primary{ background:var(--yellow); color:#1a1503; }
+  .btn-primary:hover{ opacity:0.9; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--text-dim); }
+  .btn-ghost:hover{ color:var(--text); border-color:var(--text-dim); }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(6,8,12,0.78); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:40; padding:20px;
+  }
+  .overlay.show{ display:flex; }
+  .result-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:32px; max-width:440px; width:100%; text-align:center;
+  }
+  .result-card h2{ font-size:22px; margin-bottom:4px; }
+  .result-card .sub{ margin-bottom:22px; }
+  .new-best{
+    display:inline-block; margin-top:2px; margin-bottom:14px; padding:4px 12px; border-radius:999px;
+    background:var(--yellow-dim); color:var(--yellow); font-size:11px; font-weight:800; letter-spacing:0.5px;
+  }
+  .result-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+  .result-grid .box{ background:var(--bg); border:1px solid var(--line-soft); border-radius:10px; padding:16px; }
+  .result-grid .box .v{ font-family:'JetBrains Mono',monospace; font-weight:800; font-size:28px; }
+  .result-grid .box .l{ font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="flag">GO</div>
+      <div>
+        <h1>SPRINT</h1>
+        <div class="sub">speed typing test</div>
+      </div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat" id="timeStat"><div class="v time mono" id="statTime">5:00</div><div class="l">Time left</div></div>
+      <div class="stat"><div class="v wpm mono" id="statWpm">0</div><div class="l">WPM</div></div>
+      <div class="stat"><div class="v acc mono" id="statAcc">100%</div><div class="l">Accuracy</div></div>
+      <div class="stat"><div class="v best mono" id="statBest">—</div><div class="l">Session best</div></div>
+    </div>
+  </header>
+
+  <div class="settings" id="settingsBar">
+    <div class="setting-group">
+      <span class="setting-label">Time</span>
+      <div class="pill" data-dur="15">15s</div>
+      <div class="pill" data-dur="30">30s</div>
+      <div class="pill" data-dur="60">1m</div>
+      <div class="pill active" data-dur="300">5m</div>
+      <div class="pill" data-dur="600">10m</div>
+    </div>
+    <div class="setting-group">
+      <div class="toggle" id="toggleNumbers"><div class="box"></div>Numbers</div>
+      <div class="toggle" id="togglePunct"><div class="box"></div>Punctuation</div>
+      <div class="toggle on" id="toggleSound"><div class="box"></div>Sound</div>
+    </div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="type-card" id="typeCard">
+    <div id="wordStream"></div>
+    <div class="fade-bottom"></div>
+    <div class="focus-hint">Click here to focus, then just start typing</div>
+    <input id="hiddenInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+  </div>
+
+  <div class="controls">
+    <div class="hint"><kbd>space</kbd> next word · <kbd>esc</kbd> restart · wrong letters turn red but never block you</div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-ghost" onclick="restart()">Restart</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="result-card">
+    <h2>Time's up! ⏱</h2>
+    <div class="sub" style="color:var(--text-dim); font-size:13px;">Here's how you did</div>
+    <div id="newBestBadge" style="display:none" class="new-best">🎉 New session best!</div>
+    <div class="result-grid">
+      <div class="box"><div class="v mono" style="color:var(--green)" id="finalWpm">0</div><div class="l">Words / min</div></div>
+      <div class="box"><div class="v mono" id="finalAcc">100%</div><div class="l">Accuracy</div></div>
+      <div class="box"><div class="v mono" id="finalCorrect">0</div><div class="l">Correct words</div></div>
+      <div class="box"><div class="v mono" style="color:var(--red)" id="finalMissed">0</div><div class="l">Missed words</div></div>
+    </div>
+    <button class="btn-primary" onclick="restart()">Try again</button>
+  </div>
+</div>
+
+<script>
+/* ===================== WORD POOL ===================== */
+const WORDS = ("the of and to in a is that it for on with as was be by this have from at which or an but not "+
+"they you we all your his her its our their she he them been were are will would can could should has had "+
+"do does did into about after before over under again further then once here there when where why how all "+
+"any both each few more most other some such no nor only own same so than too very just now time year work "+
+"day life world hand part child eye woman man place case week company system program question government "+
+"number night point home water room mother area money story fact month lot right study book job word business "+
+"issue side kind head house service friend father power hour game line end member law car city community name "+
+"team minute idea body information back parent face others level office door health person art war history party "+
+"result change morning reason research girl guy moment air teacher force education tree light color paper garden "+
+"river mountain music market picture dance dream bridge island cloud forest ocean desert village castle harbor "+
+"engine rocket signal window mirror candle pocket ladder pencil basket blanket hammer bottle button needle silver "+
+"golden bright quiet gentle rapid ancient modern simple complex clever brave honest careful curious eager fierce "+
+"quiet cheerful anxious grateful jealous mighty tender clumsy elegant rugged smooth rough sharp round square solid "+
+"liquid frozen boiling melting rising falling floating sinking climbing running jumping walking swimming flying "+
+"diving reading writing painting singing dancing cooking baking cleaning building fixing planting growing harvesting "+
+"traveling exploring discovering inventing designing coding testing launching landing orbiting shining glowing "+
+"sparkling flickering echoing whispering shouting laughing crying smiling frowning thinking dreaming wondering "+
+"remembering forgetting learning teaching helping sharing giving taking borrowing lending saving spending earning "+
+"working resting sleeping waking arriving leaving returning staying moving stopping starting finishing continuing").split(/\s+/);
+
+const PUNCT_MARKS = [',', '.', '!', '?', ';'];
+
+function baseWord(){ return WORDS[Math.floor(Math.random()*WORDS.length)]; }
+function randomWord(opts){
+  let w = baseWord();
+  if (opts.numbers && Math.random() < 0.12){
+    w = String(Math.floor(Math.random()*9999));
+  } else {
+    if (opts.punct && Math.random() < 0.10){
+      w = w[0].toUpperCase() + w.slice(1);
+    }
+    if (opts.punct && Math.random() < 0.16){
+      w = w + PUNCT_MARKS[Math.floor(Math.random()*PUNCT_MARKS.length)];
+    }
+  }
+  return w;
+}
+function generateWords(n, opts){ return Array.from({length:n}, ()=>randomWord(opts)); }
+
+/* ===================== SETTINGS ===================== */
+let duration = 300;
+let opts = { numbers:false, punct:false, sound:true };
+
+document.querySelectorAll('.pill[data-dur]').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    if (started) return;
+    document.querySelectorAll('.pill[data-dur]').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    duration = parseInt(p.dataset.dur, 10);
+    timeLeft = duration;
+    updateTimeDisplay();
+    restart(true);
+  });
+});
+function wireToggle(id, key){
+  const el = document.getElementById(id);
+  el.addEventListener('click', ()=>{
+    if (started) return;
+    opts[key] = !opts[key];
+    el.classList.toggle('on', opts[key]);
+    restart(true);
+  });
+}
+wireToggle('toggleNumbers','numbers');
+wireToggle('togglePunct','punct');
+wireToggle('toggleSound','sound');
+
+/* ===================== SOUND ===================== */
+let audioCtx = null;
+function beep(freq, dur){
+  if (!opts.sound) return;
+  try{
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.value = 0.05;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    osc.stop(audioCtx.currentTime + dur);
+  }catch(e){}
+}
+
+/* ===================== STATE ===================== */
+let words = [];
+let currentIndex = 0;
+let typedCorrectWords = 0;
+let typedWrongWords = 0;
+let totalKeystrokes = 0;
+let correctKeystrokes = 0;
+let timeLeft = duration;
+let timerId = null;
+let started = false;
+let finished = false;
+let wordResults = {};
+let sessionBestWpm = null;
+
+const streamEl = document.getElementById('wordStream');
+const inputEl = document.getElementById('hiddenInput');
+const overlay = document.getElementById('overlay');
+const typeCard = document.getElementById('typeCard');
+const timeStatBox = document.getElementById('timeStat');
+
+/* ===================== FOCUS HANDLING ===================== */
+typeCard.addEventListener('click', ()=>{ if (!finished) inputEl.focus(); });
+inputEl.addEventListener('focus', ()=> typeCard.classList.add('focused'));
+inputEl.addEventListener('blur', ()=> typeCard.classList.remove('focused'));
+
+/* ===================== SETUP ===================== */
+function initWords(){
+  words = generateWords(400, opts);
+  currentIndex = 0;
+  wordResults = {};
+  renderStream();
+}
+function renderStream(){
+  const parts = [];
+  for (let i=0; i<words.length; i++){
+    if (i < currentIndex - 60) continue;
+    const w = words[i];
+    if (i < currentIndex){
+      const cls = wordResults[i] === 'wrong' ? 'done-wrong' : 'done-correct';
+      parts.push(`<span class="w ${cls}">${escapeHtml(w)}</span>`);
+    } else if (i === currentIndex){
+      parts.push(`<span class="w current" id="currentWordEl">${renderCurrentWord(w)}</span>`);
+    } else {
+      parts.push(`<span class="w">${escapeHtml(w)}</span>`);
+    }
+  }
+  streamEl.innerHTML = parts.join('');
+}
+function renderCurrentWord(target){
+  const typed = inputEl.value;
+  let html = '';
+  for (let i=0; i<target.length; i++){
+    if (i < typed.length){
+      html += `<span class="ch ${typed[i]===target[i] ? 'typed-correct':'typed-wrong'}">${escapeHtml(target[i])}</span>`;
+    } else if (i === typed.length){
+      html += `<span class="caret">${escapeHtml(target[i])}</span>`;
+    } else {
+      html += escapeHtml(target[i]);
+    }
+  }
+  if (typed.length > target.length){
+    html += `<span class="extra">${escapeHtml(typed.slice(target.length))}</span>`;
+  } else if (typed.length === target.length){
+    html += `<span class="caret">&nbsp;</span>`;
+  }
+  return html;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ===================== SETTINGS LOCK ===================== */
+function lockSettings(lock){
+  document.getElementById('settingsBar').classList.toggle('locked', lock);
+}
+
+/* ===================== TIMER ===================== */
+function startTimer(){
+  if (started) return;
+  started = true;
+  lockSettings(true);
+  timerId = setInterval(()=>{
+    timeLeft--;
+    updateTimeDisplay();
+    updateProgress();
+    timeStatBox.classList.toggle('warn', timeLeft <= 10 && timeLeft > 0);
+    if (timeLeft <= 0){ endGame(); }
+  }, 1000);
+}
+function updateTimeDisplay(){
+  const m = Math.floor(timeLeft/60);
+  const s = String(timeLeft%60).padStart(2,'0');
+  document.getElementById('statTime').textContent = `${m}:${s}`;
+}
+function updateProgress(){
+  const pct = ((duration - timeLeft) / duration) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+/* ===================== INPUT HANDLING ===================== */
+let prevValue = '';
+inputEl.addEventListener('input', ()=>{
+  if (finished) return;
+  if (!started) startTimer();
+
+  const val = inputEl.value;
+  // per-keystroke accuracy: only count when a char was added (not deleted)
+  if (val.length > prevValue.length){
+    const target = words[currentIndex] || '';
+    const idx = val.length - 1;
+    totalKeystrokes++;
+    if (val[idx] === target[idx]){ correctKeystrokes++; beep(720, 0.03); }
+    else { beep(220, 0.05); }
+  }
+  prevValue = val;
+
+  if (val.endsWith(' ')){
+    submitWord(val.trim());
+    prevValue = '';
+    return;
+  }
+  renderStream();
+  scrollToCurrent();
+  updateLiveStats();
+});
+inputEl.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape'){ restart(); return; }
+  if (finished){ e.preventDefault(); return; }
+  if (e.key === ' ' && inputEl.value.trim() === ''){ e.preventDefault(); }
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape'){ restart(); return; }
+  if (document.activeElement !== inputEl && !finished){
+    // typing anywhere refocuses the hidden input
+    if (e.key.length === 1) inputEl.focus();
+  }
+});
+
+function submitWord(typed){
+  const target = words[currentIndex];
+  const correct = typed === target;
+  wordResults[currentIndex] = correct ? 'correct' : 'wrong';
+  if (correct) typedCorrectWords++; else typedWrongWords++;
+
+  currentIndex++;
+  if (currentIndex >= words.length - 20){
+    words = words.concat(generateWords(200, opts));
+  }
+  inputEl.value = '';
+  renderStream();
+  scrollToCurrent();
+  updateLiveStats();
+}
+function scrollToCurrent(){
+  const el = document.getElementById('currentWordEl');
+  if (el) el.scrollIntoView({block:'center'});
+}
+
+/* ===================== LIVE STATS ===================== */
+function updateLiveStats(){
+  const elapsedMinutes = Math.max((duration - timeLeft) / 60, 1/60);
+  const wpm = started ? Math.round(typedCorrectWords / elapsedMinutes) : 0;
+  const acc = totalKeystrokes ? Math.round((correctKeystrokes/totalKeystrokes)*100) : 100;
+  document.getElementById('statWpm').textContent = wpm;
+  document.getElementById('statAcc').textContent = acc + '%';
+}
+
+/* ===================== END GAME ===================== */
+function endGame(){
+  finished = true;
+  clearInterval(timerId);
+  typeCard.classList.add('finished');
+  inputEl.blur();
+  updateLiveStats();
+
+  const elapsedMinutes = duration / 60;
+  const wpm = Math.round(typedCorrectWords / elapsedMinutes);
+  const acc = totalKeystrokes ? Math.round((correctKeystrokes/totalKeystrokes)*100) : 100;
+
+  const isBest = sessionBestWpm === null || wpm > sessionBestWpm;
+  if (isBest){ sessionBestWpm = wpm; document.getElementById('statBest').textContent = wpm; }
+  document.getElementById('newBestBadge').style.display = isBest ? 'inline-block' : 'none';
+
+  document.getElementById('finalWpm').textContent = wpm;
+  document.getElementById('finalAcc').textContent = acc + '%';
+  document.getElementById('finalCorrect').textContent = typedCorrectWords;
+  document.getElementById('finalMissed').textContent = typedWrongWords;
+  overlay.classList.add('show');
+}
+
+/* ===================== RESTART ===================== */
+function restart(silent){
+  clearInterval(timerId);
+  started = false; finished = false;
+  timeLeft = duration;
+  typedCorrectWords = 0; typedWrongWords = 0;
+  totalKeystrokes = 0; correctKeystrokes = 0;
+  prevValue = '';
+  typeCard.classList.remove('finished');
+  timeStatBox.classList.remove('warn');
+  lockSettings(false);
+  inputEl.value = '';
+  overlay.classList.remove('show');
+  updateTimeDisplay();
+  document.getElementById('progressFill').style.width = '0%';
+  updateLiveStats();
+  initWords();
+  if (!silent) inputEl.focus();
+}
+
+/* ===================== INIT ===================== */
+document.getElementById('statBest').textContent = '—';
+updateTimeDisplay();
+initWords();
+inputEl.focus();
+</script>
+</body>
+</html>

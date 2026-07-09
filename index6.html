@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stickman Street Fighter: Impact Edition</title>
+    <title>Stickman Street Fighter: Dual Impact Edition</title>
     <style>
         * {
             box-sizing: border-box;
@@ -26,7 +27,7 @@
         #game-wrapper {
             position: relative;
             width: 1000px;
-            height: 500px;
+            height: 520px;
             background: #111;
             border: 4px solid #ff3355;
             box-shadow: 0 0 30px rgba(255, 51, 85, 0.3);
@@ -43,7 +44,7 @@
         /* Arcade Style Top HUD */
         #ui-layer {
             position: absolute;
-            top: 25px;
+            top: 20px;
             left: 30px;
             right: 30px;
             display: flex;
@@ -62,9 +63,9 @@
         .health-container {
             background: #331010;
             border: 3px solid #fff;
-            height: 30px;
+            height: 26px;
             transform: skewX(-15deg);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             overflow: hidden;
         }
 
@@ -75,8 +76,13 @@
             transition: width 0.05s linear;
         }
 
-        #p1-side .health-bar { float: right; }
-        #ai-side .health-bar { float: left; }
+        #p1-side .health-bar {
+            float: right;
+        }
+
+        #p2-side .health-bar {
+            float: left;
+        }
 
         /* Super Meter Bars */
         .meter-container {
@@ -87,8 +93,20 @@
             transform: skewX(-15deg);
             overflow: hidden;
         }
-        #p1-side .meter-container { align-self: flex-start; }
-        #ai-side .meter-container { align-self: flex-end; }
+
+        #p1-side .meter-container {
+            align-self: flex-start;
+            border-color: #00d2ff;
+        }
+
+        #p2-side .meter-container {
+            align-self: flex-end;
+            border-color: #ffaa00;
+        }
+
+        #p2-side .meter-bar {
+            background: linear-gradient(to right, #ff5500, #ffcc00);
+        }
 
         .meter-bar {
             height: 100%;
@@ -103,110 +121,130 @@
             text-shadow: 2px 2px #000;
             color: #00d2ff;
         }
-        #ai-side .fighter-name { color: #ff3355; text-align: right; }
 
-        /* Combat Deck */
-        #control-panel {
+        #p2-side .fighter-name {
+            color: #ffaa00;
+            text-align: right;
+        }
+
+        /* Keybind Overlay Layout Helpers */
+        .controls-legend {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 15px;
+            left: 20px;
+            right: 20px;
             display: flex;
-            gap: 20px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 15px 30px;
-            border-radius: 8px;
-            border: 2px solid #ff3355;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            justify-content: space-between;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            border-top: 1px solid #333;
+            font-family: sans-serif;
+            color: #ccc;
         }
 
-        .control-group { display: flex; gap: 8px; }
+        .legend-side b {
+            color: #fff;
+            font-family: 'Impact';
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
 
-        .hud-btn {
-            width: 65px;
-            height: 65px;
-            border: 2px solid #fff;
-            background: #222;
-            color: white;
+        .mana-txt {
+            color: #00d2ff;
             font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.05s;
-            font-size: 0.8rem;
         }
 
-        .hud-btn span { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
-        .hud-btn:active { transform: scale(0.9); background: #ff3355; }
-
-        .move-btn { border-color: #00ffaa; }
-        .super-btn { border-color: #ffcc00; color: #ffcc00; }
-        .super-btn:active { background: #ffcc00; color: #000; }
+        .mana-txt-p2 {
+            color: #ffcc00;
+            font-weight: bold;
+        }
 
         /* Overlays */
         .overlay-screen {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(5, 5, 10, 0.95);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
         }
 
-        h1 { font-size: 4rem; letter-spacing: 4px; font-style: italic; text-shadow: 4px 4px #000; }
-        .start-btn {
-            margin-top: 20px; padding: 15px 50px; font-size: 1.5rem; background: #ff3355; color: #fff;
-            border: none; cursor: pointer; font-family: 'Impact'; font-style: italic; letter-spacing: 1px;
+        h1 {
+            font-size: 3.5rem;
+            letter-spacing: 4px;
+            font-style: italic;
+            text-shadow: 4px 4px #000;
+            text-align: center;
         }
-        .start-btn:hover { background: #fff; color: #ff3355; }
+
+        .start-btn {
+            padding: 12px 50px;
+            font-size: 1.5rem;
+            background: #ff3355;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-family: 'Impact';
+            font-style: italic;
+            letter-spacing: 1px;
+            border-radius: 4px;
+        }
+
+        .start-btn:hover {
+            background: #fff;
+            color: #ff3355;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="game-wrapper">
         <div id="ui-layer">
             <div class="fighter-side" id="p1-side">
-                <div class="fighter-name">PLAYER</div>
-                <div class="health-container"><div id="p1-bar" class="health-bar"></div></div>
-                <div class="meter-container"><div id="p1-meter" class="meter-bar"></div></div>
+                <div class="fighter-name">PLAYER 1</div>
+                <div class="health-container">
+                    <div id="p1-bar" class="health-bar"></div>
+                </div>
+                <div class="meter-container">
+                    <div id="p1-meter" class="meter-bar"></div>
+                </div>
             </div>
             <div style="font-size: 2rem; color: #fff; font-style: italic; padding-top: 5px;">VS</div>
-            <div class="fighter-side" id="ai-side">
-                <div class="fighter-name">STREET AI</div>
-                <div class="health-container"><div id="ai-bar" class="health-bar"></div></div>
-                <div class="meter-container"><div id="ai-meter" class="meter-bar"></div></div>
+            <div class="fighter-side" id="p2-side">
+                <div class="fighter-name">PLAYER 2</div>
+                <div class="health-container">
+                    <div id="p2-bar" class="health-bar"></div>
+                </div>
+                <div class="meter-container">
+                    <div id="p2-meter" class="meter-bar"></div>
+                </div>
             </div>
         </div>
 
-        <div id="control-panel">
-            <div class="control-group">
-                <div class="hud-btn move-btn" onmousedown="startMove('a')" onmouseup="stopMove('a')">LEFT<span>[A]</span></div>
-                <div class="hud-btn move-btn" onmousedown="startMove('s')" onmouseup="stopMove('s')">BLOCK<span>[S]</span></div>
-                <div class="hud-btn move-btn" onclick="triggerJump()">JUMP<span>[SPACE]</span></div>
-                <div class="hud-btn move-btn" onmousedown="startMove('d')" onmouseup="stopMove('d')">RIGHT<span>[D]</span></div>
-            </div>
-            <div style="width: 2px; height: 50px; background: #444;"></div>
-            <div class="control-group">
-                <div class="hud-btn" onclick="triggerSkill('punch')">PUNCH<span>[Q]</span></div>
-                <div class="hud-btn" onclick="triggerSkill('kick')">KICK<span>[W]</span></div>
-                <div class="hud-btn" onclick="triggerSkill('uppercut')">UPPER<span>[E]</span></div>
-                <div class="hud-btn" onclick="triggerSkill('hadouken')">BLAST<span>[R]</span></div>
-                <div class="hud-btn super-btn" onclick="triggerSkill('super')">SUPER<span>[F]</span></div>
-            </div>
+        <div class="controls-legend">
+            <div class="legend-side"><b class="p1-color">P1:</b> A/D=Move | S=Block | Space=Jump | Q=Punch | W=Kick |
+                E=Upper | T=AxeKick | F=Dash <br> R=Kamehameha (<span class="mana-txt">25 Mana</span>) | G=SUPER (<span
+                    class="mana-txt">100 Mana</span>)</div>
+
+            <div class="legend-side" style="text-align: right;"><b class="p2-color">P2 (NUMPAD):</b> 4/6=Move | 5=Block
+                | 8=Jump | 7=Punch | 9=Kick | 1=Upper | 3=AxeKick <br> 0=Dash | /=Kamehameha (<span
+                    class="mana-txt-p2">25 Mana</span>) | *=SUPER (<span class="mana-txt-p2">100 Mana</span>)</div>
         </div>
 
         <canvas id="stageCanvas"></canvas>
 
-        <div id="menu-screen" class="overlay-screen">
-            <h1 style="color: #ff3355;">STICKMAN STREET FIGHTER</h1>
-            <p style="color: #aaa; margin-top: 10px;">A/D: Move | S: Hold to Block Attacks | Q/W/E/R: Combat Skills | F: Super Combo</p>
-            <button class="start-btn" onclick="initMatch()">FIGHT</button>
-        </div>
-
         <div id="end-screen" class="overlay-screen" style="display: none;">
             <h1 id="end-title">VICTORY</h1>
-            <button class="start-btn" onclick="initMatch()">REM_ATCH</button>
+            <button class="start-btn" style="margin-top:20px;" onclick="initMatch()">REMATCH</button>
         </div>
     </div>
 
@@ -215,20 +253,25 @@
         const ctx = canvas.getContext('2d');
         canvas.width = 1000; canvas.height = 500;
 
-        let p1, ai, projectiles, effects, gameRunning = false;
-        let keys = { a: false, d: false, s: false };
+        let p1, p2, projectiles = [], effects = [], gameRunning = false;
+
+        let keys = {
+            KeyA: false, KeyD: false, KeyS: false,
+            Numpad4: false, Numpad6: false, Numpad5: false
+        };
+
         let shakeTime = 0, shakeIntensity = 0;
         let hitStopFrames = 0;
 
         class Fighter {
-            constructor(x, isAI) {
+            constructor(x, id, color) {
                 this.x = x; this.y = 390; this.vx = 0; this.vy = 0;
-                this.isAI = isAI; this.hp = 100; this.meter = 0;
-                this.dir = isAI ? -1 : 1;
-                this.state = 'idle'; // idle, walking, attacking, blocking, hit, airborne
+                this.id = id; this.hp = 100; this.meter = 0;
+                this.dir = id === 1 ? 1 : -1;
+                this.state = 'idle';
                 this.stateTimer = 0; this.attackType = '';
                 this.groundY = 390;
-                this.color = isAI ? '#ff3355' : '#00d2ff';
+                this.color = color;
                 this.trail = [];
             }
 
@@ -241,14 +284,17 @@
                     if (this.state === 'airborne') this.state = 'idle';
                 }
 
-                // Input handling / Movement Physics
-                if (!this.isAI && this.state !== 'hit' && this.state !== 'attacking') {
-                    if (keys.s && this.y === this.groundY) {
+                if (this.state !== 'hit' && this.state !== 'attacking') {
+                    let isMovingLeft = this.id === 1 ? keys.KeyA : keys.Numpad4;
+                    let isMovingRight = this.id === 1 ? keys.KeyD : keys.Numpad6;
+                    let isBlocking = this.id === 1 ? keys.KeyS : keys.Numpad5;
+
+                    if (isBlocking && this.y === this.groundY) {
                         this.state = 'blocking';
                         this.vx *= 0.5;
-                    } else if (keys.a) {
+                    } else if (isMovingLeft) {
                         this.vx = -6; this.state = 'walking';
-                    } else if (keys.d) {
+                    } else if (isMovingRight) {
                         this.vx = 6; this.state = 'walking';
                     } else {
                         this.vx *= 0.7;
@@ -259,11 +305,12 @@
                 }
 
                 this.x += this.vx; this.y += this.vy;
-                if (this.x < 40) this.x = 40; if (this.x > canvas.width - 40) this.x = canvas.width - 40;
 
-                // Track position history for movement visual blur trails
-                this.trail.push({x: this.x, y: this.y});
-                if(this.trail.length > 5) this.trail.shift();
+                if (this.x < 40) this.x = 40;
+                if (this.x > canvas.width - 40) this.x = canvas.width - 40;
+
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > 6) this.trail.shift();
 
                 if (this.state !== 'attacking' && this.state !== 'hit' && this.state !== 'blocking') {
                     this.dir = (this.x < opponent.x) ? 1 : -1;
@@ -273,115 +320,98 @@
                     this.stateTimer--;
                     if (this.stateTimer <= 0 && (this.state === 'attacking' || this.state === 'hit')) this.state = 'idle';
                 }
-
-                if (this.isAI && this.state === 'idle') this.handleAILogic(opponent);
-            }
-
-            handleAILogic(opponent) {
-                let dist = Math.abs(this.x - opponent.x);
-                // Smart AI reaction checking block status
-                if (opponent.state === 'attacking' && dist < 120 && Math.random() < 0.4) {
-                    this.state = 'blocking';
-                    this.vx = -this.dir * 2;
-                    return;
-                }
-
-                if (dist > 130) {
-                    this.state = 'walking';
-                    this.vx = this.dir * 4.5;
-                } else {
-                    let rand = Math.random();
-                    if (rand < 0.03) this.performAttack('punch');
-                    else if (rand < 0.05) this.performAttack('kick');
-                    else if (rand < 0.07) this.performAttack('uppercut');
-                    else if (rand < 0.08 && this.meter >= 100) this.performAttack('super');
-                }
             }
 
             performAttack(type) {
                 if ((this.state === 'attacking' && type !== 'super') || this.state === 'hit') return;
-                if (type === 'super' && this.meter < 100) return;
 
                 if (type === 'super') {
+                    if (this.meter < 100) return;
                     this.meter = 0;
                     this.updateMeterHUD();
                     triggerCameraShake(25, 12);
                 }
 
-                this.state = 'attacking'; this.attackType = type;
+                if (type === 'kamehameha') {
+                    if (this.meter < 25) return;
+                    this.meter -= 25;
+                    this.updateMeterHUD();
+                }
+
+                this.state = 'attacking';
+                this.attackType = type;
 
                 if (type === 'punch') {
                     this.stateTimer = 12; this.vx = this.dir * 7;
                     checkHitbox(this, 70, 30, -55, 6, 'punch');
                 } else if (type === 'kick') {
-                    this.stateTimer = 18; this.vx = this.dir * 10;
-                    checkHitbox(this, 85, 30, -30, 12, 'kick');
+                    this.stateTimer = 16; this.vx = this.dir * 10;
+                    checkHitbox(this, 85, 30, -30, 10, 'kick');
                 } else if (type === 'uppercut') {
-                    this.stateTimer = 28; this.vy = -18; this.vx = this.dir * 5;
-                    checkHitbox(this, 70, 80, -90, 18, 'uppercut');
-                } else if (type === 'hadouken') {
-                    this.stateTimer = 22;
-                    projectiles.push(new EnergyBlast(this.x + (this.dir * 40), this.y - 50, this.dir, this.color));
+                    this.stateTimer = 26; this.vy = -18; this.vx = this.dir * 5;
+                    checkHitbox(this, 70, 80, -90, 16, 'uppercut');
+                } else if (type === 'axekick') {
+                    this.stateTimer = 22; this.vy = -6; this.vx = this.dir * 11;
+                    checkHitbox(this, 80, 85, -80, 18, 'axekick');
+                } else if (type === 'dash') {
+                    this.stateTimer = 10; this.vx = this.dir * 28;
+                    createSparks(this.x, this.y - 40, this.color, 5);
+                } else if (type === 'kamehameha') {
+                    this.stateTimer = 25;
+                    projectiles.push(new KamehamehaWave(this.x + (this.dir * 45), this.y - 50, this.dir, this.color, this.id));
                 } else if (type === 'super') {
-                    this.stateTimer = 45; this.vx = this.dir * 18;
-                    checkHitbox(this, 120, 90, -90, 35, 'super');
+                    this.stateTimer = 45; this.vx = this.dir * 20;
+                    checkHitbox(this, 130, 90, -90, 35, 'super');
                 }
             }
 
             takeDamage(amount, kX, kY) {
                 if (this.state === 'blocking') {
-                    amount = Math.floor(amount * 0.15); // Shield mitigates 85% damage
+                    amount = Math.floor(amount * 0.15);
                     kX *= 0.2; kY = 0;
                     createSparks(this.x + (this.dir * 20), this.y - 50, '#ffffff', 4);
                 } else {
                     this.state = 'hit'; this.stateTimer = 24;
                     this.vx = kX; this.vy = kY;
                     triggerCameraShake(15, Math.abs(amount) > 15 ? 10 : 5);
-                    hitStopFrames = Math.abs(amount) > 15 ? 8 : 4; // Hit freeze frames
-                    createSparks(this.x, this.y - 50, this.isAI ? '#ff3333' : '#00d2ff', 12);
+                    hitStopFrames = Math.abs(amount) > 15 ? 8 : 4;
+                    createSparks(this.x, this.y - 50, this.id === 1 ? '#00d2ff' : '#ffaa00', 12);
                 }
 
                 this.hp = Math.max(0, this.hp - amount);
-                
-                // Meter build on damage received/dealt
-                if(!this.isAI) {
-                    p1.meter = Math.min(100, p1.meter + amount * 0.8);
-                    p1.updateMeterHUD();
-                } else {
-                    ai.meter = Math.min(100, ai.meter + amount * 0.8);
-                    ai.updateMeterHUD();
-                }
+                this.meter = Math.min(100, this.meter + amount * 0.7);
+                this.updateMeterHUD();
 
-                document.getElementById(this.isAI ? 'ai-bar' : 'p1-bar').style.width = this.hp + '%';
-                if (this.hp <= 0) endGame(this.isAI);
+                let attacker = this.id === 1 ? p2 : p1;
+                attacker.meter = Math.min(100, attacker.meter + amount * 0.4);
+                attacker.updateMeterHUD();
+
+                document.getElementById(this.id === 1 ? 'p1-bar' : 'p2-bar').style.width = this.hp + '%';
+                if (this.hp <= 0) endGame(this.id);
             }
 
             updateMeterHUD() {
-                document.getElementById(this.isAI ? 'ai-meter' : 'p1-meter').style.width = this.meter + '%';
+                document.getElementById(this.id === 1 ? 'p1-meter' : 'p2-meter').style.width = this.meter + '%';
             }
 
             draw() {
                 ctx.save();
                 ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = this.color;
 
-                // Simple blur motion layout
                 this.trail.forEach((t, i) => {
-                    ctx.globalAlpha = (i + 1) * 0.1;
-                    ctx.beginPath(); ctx.arc(t.x, t.y - 80, 10, 0, Math.PI*2); ctx.stroke();
+                    ctx.globalAlpha = (i + 1) * 0.08;
+                    ctx.beginPath(); ctx.arc(t.x, t.y - 80, 14, 0, Math.PI * 2); ctx.stroke();
                 });
                 ctx.globalAlpha = 1.0;
 
                 let hY = this.y - 80, cY = this.y - 50, pY = this.y - 30;
-                
-                // Head
+
                 ctx.beginPath(); ctx.arc(this.x, hY, 14, 0, Math.PI * 2);
                 ctx.fillStyle = this.state === 'blocking' ? '#fff' : this.color;
                 ctx.fill(); ctx.stroke();
 
-                // Spine
                 ctx.beginPath(); ctx.moveTo(this.x, hY + 14); ctx.lineTo(this.x, pY); ctx.stroke();
 
-                // Limbs positioning
                 let lHX = this.x - 16, lHY = cY + 8, rHX = this.x + 16, rHY = cY + 8;
                 let lFX = this.x - 15, lFY = this.y, rFX = this.x + 15, rFY = this.y;
 
@@ -392,6 +422,8 @@
                     if (this.attackType === 'punch') { rHX = this.x + (this.dir * 55); rHY = cY - 15; }
                     else if (this.attackType === 'kick') { rFX = this.x + (this.dir * 65); rFY = pY - 10; }
                     else if (this.attackType === 'uppercut') { rHX = this.x + (this.dir * 10); rHY = hY - 45; }
+                    else if (this.attackType === 'axekick') { rFX = this.x + (this.dir * 45); rFY = hY - 30; }
+                    else if (this.attackType === 'kamehameha') { rHX = this.x + (this.dir * 45); rHY = cY - 5; lHX = this.x + (this.dir * 35); lHY = cY + 10; }
                     else if (this.attackType === 'super') { rHX = this.x + (this.dir * 70); rHY = cY - 5; ctx.strokeStyle = '#ffcc00'; }
                 } else if (this.state === 'hit') {
                     lHX = this.x - (this.dir * 25); lHY = hY; rHX = this.x - (this.dir * 15); rHY = hY - 15;
@@ -405,40 +437,49 @@
             }
         }
 
-        class EnergyBlast {
-            constructor(x, y, dir, color) {
-                this.x = x; this.y = y; this.dir = dir; this.color = color;
-                this.speed = dir * 14; this.active = true;
+        class KamehamehaWave {
+            constructor(x, y, dir, color, ownerId) {
+                this.x = x; this.y = y; this.dir = dir; this.color = color; this.ownerId = ownerId;
+                this.speed = dir * 16; this.active = true;
             }
             update(opp) {
                 this.x += this.speed;
-                if (this.x < 0 || this.x > canvas.width) this.active = false;
-                if (Math.abs(this.x - opp.x) < 35 && Math.abs(this.y - (opp.y - 45)) < 50) {
+                if (this.x < -50 || this.x > canvas.width + 50) {
                     this.active = false;
-                    opp.takeDamage(14, this.dir * 12, -4);
+                    return;
+                }
+
+                if (Math.abs(this.x - opp.x) < 40 && Math.abs(this.y - (opp.y - 50)) < 60) {
+                    this.active = false;
+                    opp.takeDamage(15, this.dir * 14, -4);
                 }
             }
             draw() {
-                ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = this.color;
-                ctx.fillStyle = '#fff'; ctx.beginPath();
-                ctx.arc(this.x, this.y, 18, 0, Math.PI*2); ctx.fill(); ctx.restore();
+                ctx.save();
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 22, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
             }
         }
 
         function checkHitbox(atkr, w, h, offsetTop, dmg, type) {
-            let opp = atkr.isAI ? p1 : ai;
+            let opp = atkr.id === 1 ? p2 : p1;
             let boxX = atkr.dir === 1 ? atkr.x : atkr.x - w;
             let boxY = atkr.y + offsetTop;
 
             if (boxX + w > opp.x - 25 && boxX < opp.x + 25 && boxY + h > opp.y - 90 && boxY < opp.y) {
-                let kX = atkr.dir * (type === 'kick' ? 18 : (type === 'super' ? 25 : 8));
-                let kY = type === 'uppercut' ? -22 : (type === 'super' ? -8 : -3);
+                let kX = atkr.dir * (type === 'kick' ? 18 : (type === 'super' ? 25 : (type === 'axekick' ? 14 : 8)));
+                let kY = type === 'uppercut' ? -22 : (type === 'super' ? -8 : (type === 'axekick' ? 12 : -3));
                 opp.takeDamage(dmg, kX, kY);
             }
         }
 
         function createSparks(x, y, color, count) {
-            for(let i=0; i<count; i++) {
+            for (let i = 0; i < count; i++) {
                 effects.push({
                     x: x, y: y, vx: (Math.random() - 0.5) * 14, vy: (Math.random() - 0.5) * 14,
                     life: 20, color: color, size: Math.random() * 4 + 2
@@ -450,40 +491,74 @@
             shakeTime = time; shakeIntensity = intensity;
         }
 
-        // Controls Bindings Mapping
         window.addEventListener('keydown', e => {
             if (!gameRunning) return;
-            let k = e.key.toLowerCase();
-            if (k === 'a') keys.a = true; if (k === 'd') keys.d = true; if (k === 's') keys.s = true;
-            if (e.key === ' ' || k === 'spacebar') triggerJump();
-            if (k === 'q') triggerSkill('punch'); if (k === 'w') triggerSkill('kick');
-            if (k === 'e') triggerSkill('uppercut'); if (k === 'r') triggerSkill('hadouken');
-            if (k === 'f') triggerSkill('super');
+
+            // Prevent standard browser interactions for action keys
+            if (["Space", "Numpad8", "Numpad5", "Numpad4", "Numpad6", "Slash"].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            // --- PLAYER 1 CONTROLS ---
+            if (e.code === 'KeyA') keys.KeyA = true;
+            if (e.code === 'KeyD') keys.KeyD = true;
+            if (e.code === 'KeyS') keys.KeyS = true;
+            if (e.code === 'Space') {
+                if (p1.y === p1.groundY && p1.state !== 'hit' && p1.state !== 'attacking') p1.vy = -21;
+            }
+            if (e.code === 'KeyQ') p1.performAttack('punch');
+            if (e.code === 'KeyW') p1.performAttack('kick');
+            if (e.code === 'KeyE') p1.performAttack('uppercut');
+            if (e.code === 'KeyR') p1.performAttack('kamehameha');
+            if (e.code === 'KeyT') p1.performAttack('axekick');
+            if (e.code === 'KeyF') p1.performAttack('dash');
+            if (e.code === 'KeyG') p1.performAttack('super');
+
+            // --- PLAYER 2 NUMPAD CONTROLS ---
+            if (e.code === 'Numpad4') keys.Numpad4 = true;
+            if (e.code === 'Numpad6') keys.Numpad6 = true;
+            if (e.code === 'Numpad5') keys.Numpad5 = true;
+            if (e.code === 'Numpad8') {
+                if (p2.y === p2.groundY && p2.state !== 'hit' && p2.state !== 'attacking') p2.vy = -21;
+            }
+            if (e.code === 'Numpad7') p2.performAttack('punch');
+            if (e.code === 'Numpad9') p2.performAttack('kick');
+            if (e.code === 'Numpad1') p2.performAttack('uppercut');
+            if (e.code === 'Numpad3') p2.performAttack('axekick');
+            if (e.code === 'Numpad0') p2.performAttack('dash');
+            if (e.code === 'NumpadDivide') p2.performAttack('kamehameha');
+            if (e.code === 'NumpadMultiply') p2.performAttack('super');
         });
 
         window.addEventListener('keyup', e => {
-            let k = e.key.toLowerCase();
-            if (k === 'a') keys.a = false; if (k === 'd') keys.d = false; if (k === 's') keys.s = false;
+            if (e.code === 'KeyA') keys.KeyA = false;
+            if (e.code === 'KeyD') keys.KeyD = false;
+            if (e.code === 'KeyS') keys.KeyS = false;
+
+            if (e.code === 'Numpad4') keys.Numpad4 = false;
+            if (e.code === 'Numpad6') keys.Numpad6 = false;
+            if (e.code === 'Numpad5') keys.Numpad5 = false;
         });
 
-        function startMove(dirKey) { keys[dirKey] = true; }
-        function stopMove(dirKey) { keys[dirKey] = false; }
-        function triggerJump() { if (p1.y === p1.groundY && p1.state !== 'hit') p1.vy = -20; }
-        function triggerSkill(skill) { if (gameRunning && p1.state !== 'hit') p1.performAttack(skill); }
-
         function initMatch() {
-            p1 = new Fighter(200, false); ai = new Fighter(800, true);
-            projectiles = []; effects = []; keys = { a: false, d: false, s: false };
-            document.getElementById('p1-bar').style.width = '100%'; document.getElementById('ai-bar').style.width = '100%';
-            p1.updateMeterHUD(); ai.updateMeterHUD();
-            document.getElementById('menu-screen').style.display = 'none'; document.getElementById('end-screen').style.display = 'none';
-            gameRunning = true; requestAnimationFrame(updateLoop);
+            p1 = new Fighter(250, 1, '#00d2ff');
+            p2 = new Fighter(750, 2, '#ffaa00');
+            projectiles = []; effects = [];
+            keys = { KeyA: false, KeyD: false, KeyS: false, Numpad4: false, Numpad6: false, Numpad5: false };
+
+            document.getElementById('p1-bar').style.width = '100%';
+            document.getElementById('p2-bar').style.width = '100%';
+            p1.updateMeterHUD(); p2.updateMeterHUD();
+
+            document.getElementById('end-screen').style.display = 'none';
+
+            gameRunning = true;
+            requestAnimationFrame(updateLoop);
         }
 
         function updateLoop() {
             if (!gameRunning) return;
 
-            // Handle Hit-Stop Freeze frames to add dramatic weight
             if (hitStopFrames > 0) {
                 hitStopFrames--;
                 requestAnimationFrame(updateLoop);
@@ -491,46 +566,55 @@
             }
 
             ctx.save();
-            // Screen Shake Rendering Modifier
             if (shakeTime > 0) {
                 let dx = (Math.random() - 0.5) * shakeIntensity;
                 let dy = (Math.random() - 0.5) * shakeIntensity;
                 ctx.translate(dx, dy); shakeTime--;
             }
 
-            // Dark Concrete Arena Backdrop
             ctx.fillStyle = '#14161f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#0b0c10'; ctx.fillRect(0, 390, canvas.width, canvas.height - 390);
             ctx.strokeStyle = '#ff3355'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(0, 390); ctx.lineTo(canvas.width, 390); ctx.stroke();
 
-            p1.update(ai); ai.update(p1);
+            p1.update(p2); p2.update(p1);
 
-            projectiles.forEach((p, idx) => {
-                p.update(p.dir === 1 ? ai : p1); p.draw();
-                if (!p.active) projectiles.splice(idx, 1);
-            });
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                p.update(p.ownerId === 1 ? p2 : p1);
+                if (p.active) {
+                    p.draw();
+                } else {
+                    projectiles.splice(i, 1);
+                }
+            }
 
             effects.forEach((eff, idx) => {
                 eff.x += eff.vx; eff.y += eff.vy; eff.life--;
                 ctx.fillStyle = eff.color;
                 ctx.fillRect(eff.x, eff.y, eff.size, eff.size);
-                if(eff.life <= 0) effects.splice(idx, 1);
+                if (eff.life <= 0) effects.splice(idx, 1);
             });
 
-            p1.draw(); ai.draw();
+            p1.draw(); p2.draw();
             ctx.restore();
 
             requestAnimationFrame(updateLoop);
         }
 
-        function endGame(isAiLoser) {
+        function endGame(loserId) {
             gameRunning = false;
             const t = document.getElementById('end-title');
-            t.innerText = isAiLoser ? "VICTORY" : "DEFEAT";
-            t.style.color = isAiLoser ? "#00d2ff" : "#ff3355";
+            let winnerText = loserId === 1 ? "PLAYER 2 WINS" : "PLAYER 1 WINS";
+            t.innerText = winnerText;
+            t.style.color = loserId === 1 ? "#ffaa00" : "#00d2ff";
             document.getElementById('end-screen').style.display = 'flex';
         }
+
+        window.onload = () => {
+            initMatch();
+        };
     </script>
 </body>
+
 </html>
